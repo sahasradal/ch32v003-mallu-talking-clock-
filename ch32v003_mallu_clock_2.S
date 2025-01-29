@@ -105,7 +105,9 @@ MADCTL_MH  = 0x04
 #UART_RX                = PD6
 #save_switch            = PD3
 #next_switch            = PD4
-#
+#menu_switch            = PD2
+#audio_switch           = PC4
+#DFplayer control       = PC7
 #########################################   VARIABLES
 fclk 		= 24000000   		# 24Mhz RCO internal , AHB =8Mhz by default
 state 		= 0x2000000C 		# located in SRAM
@@ -436,7 +438,7 @@ sp_init:
 #configure GPIO PortC as multiplex push-pull output for SPI
 	la x10,R32_GPIOC_CFGLR		# load pointer x10 with address of R32_GPIOC_CFGLR , I2C SDA & SCL is on portC PC1,PC2
 	lw x11,0(x10)			# load contents from register pointed by x10
-	li x7,~((0xf<<4)|(0xf<<8)|(0xf<<20)|(0xf<<24)|(0xf<<28))	# clear pc1,pc5,pc6,pc7. we need to setup PC1 ,PC5,PC6,PC7 for SPI
+	li x7,~((0xf<<4)|(0xf<<8)|(0xf<<20)|(0xf<<24)|(0xf<<28))	# clear pc1,pc2,pc5,pc6,pc7. we need to setup PC1 ,PC5,PC6,PC7 for SPI
 	and x11,x11,x7			# clear  mode and cnf bits for selected pin C1,C2
 	li x7,((0xB<<4)|(0x3<<8)|(0xB<<20)|(0xB<<24)|(0xB<<28))		# PC1,PC5,PC6,PC7 = multiplex pushpull output 50mhz , 0b1011
 	or x11,x11,x7			# OR value to register
@@ -665,9 +667,19 @@ here:
 	call print_week
 
 
+check_sw:
+	la a4,R32_GPIOD_INDR	# load a4 with PortD base address
+	lw a3,0(a4)		# load a3 with contents of portD Istatus
+	andi a3,a3,0x00000004	# and with 0x04 to isolate PD2 status
+	bnez a3,date_sw		# if 1 branch to label no menu. If PD0 pressed time set menu is called else go to time display/update
+	call menu		# calls routine to 
 
-
-
+voice_sw:
+	la a4,R32_GPIOD_INDR	# load a4 with PortD base address
+	lw a3,0(a4)		# load a3 with contents of portD Istatus
+	andi a3,a3,0x00000004	# and with 0x04 to isolate PD2 status
+	bnez a3,show_time	# if 1 branch to label no menu. If PD2 pressed time set menu is called else go to time display/update
+	call start_audio		# calls routine to
 
 
 
