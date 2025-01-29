@@ -3,8 +3,9 @@
 #=======================================================================================    
 #I2C_SCL 		= PC2 # I2C  clock on PC2 (reccomended external pullup 4.7k)
 #I2C_SDA 		= PC1 # I2C  data on PC1 (reccomended external pullup 4.7k)
-#UART_TX		= PD5
+#UART_TX		= PD5 connected to DFmini player RX
 #UART_RX                = PD6
+#DFmini control         = PC3 connected to a transistor base to power on/off DF player when voice switch is pressed. The DF player is switched off normally to save power.
 #save switch  		= PD3
 #next switch  		= PD4
 #adjust switch  	= PD0
