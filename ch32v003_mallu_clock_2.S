@@ -103,6 +103,9 @@ MADCTL_MH  = 0x04
 #I2C_SDA 		= PD0 # I2C  data on PD0 (reccomended external pullup 4.7k)
 #UART_TX		= PD5
 #UART_RX                = PD6
+#save_switch            = PD3
+#next_switch            = PD4
+#
 #########################################   VARIABLES
 fclk 		= 24000000   		# 24Mhz RCO internal , AHB =8Mhz by default
 state 		= 0x2000000C 		# located in SRAM
@@ -1154,19 +1157,21 @@ print_date_loop:
 	lw ra,0(sp)
 	addi sp,sp,12
 	ret
-
-
-#################################################################
+##########################################################################################
+# Print_week  prints weekday string on LCD. call set cursor and then call print_week
+#########################################################################################
 print_week:
 	addi sp,sp,-8
 	sw ra,0(sp)
 	sw a2,4(sp)
-	la a2,week
+	la a2,week			# variable in SRAM , holds address of string of current week day.
+	lw a5,0(a2)			# load the address of the week string to a5
+	mv a2,a5			# copy from a5 to a2 register. now a2 register has the address of the null terminated string (eg "monday ")
 sr_loop:
     	lb a5, 0(a2)             	# Load the current byte (character) into a1
     	beq a5, zero, end_loop   	# If character is null (0), exit the loop
-	call select_font
-	call DRAW_CHAR32
+	call select_font		# subroutine to calculate the address of the font in table
+	call DRAW_CHAR32		# subroutine to write the fint on the ST LCD
 	call push_cursor1		# move cursor one box ahead for the next char
 	addi a2,a2,1           		# increase address by 1 for next byte
 	j sr_loop             		# Repeat the loop
