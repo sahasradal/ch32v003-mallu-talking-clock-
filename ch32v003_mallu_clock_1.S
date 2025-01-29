@@ -532,7 +532,8 @@ finish:
 main_loop:
 ################################
 # OLED initialization 	       #
-################################	
+################################
+	call delay1S		# allows OLED to power up properly before init. else screen freezes
 	call I2C_BUSY		# check weather I2C is busy ,wait till free
 	call I2C_START		# send start condition on I2C bus
 	li a5,OLEDaddress
@@ -1620,7 +1621,7 @@ scan_save:
 scan_next:	
 	la a4,R32_GPIOD_INDR			# load a4 with PortA base address
 	lw a3,0(a4)				# load a3 with contents of portA Istatus
-	andi a3,a3,0x00000040			# and with 0x08 to isolate PA6 status
+	andi a3,a3,0x00000010			# and with 0x10 to isolate PD4 status
 	beqz a3,next_hr				# if 0 branch to label next hour	
 	j scan_save
 next_hr:
@@ -1671,7 +1672,7 @@ scan_save_day:
 scan_next_day:	
 	la a4,R32_GPIOD_INDR			# load a4 with PortA base address
 	lw a3,0(a4)				# load a3 with contents of portA Istatus
-	andi a3,a3,0x00000040			# and with 0x08 to isolate PA6 status
+	andi a3,a3,0x00000010			# and with 0x10 to isolate PA4 status
 	beqz a3,next_day			# if 0 branch to label next day	
 	j scan_save_day
 next_day:
@@ -1722,7 +1723,7 @@ scan_save_date:
 scan_next_date:	
 	la a4,R32_GPIOD_INDR			# load a4 with PortA base address
 	lw a3,0(a4)				# load a3 with contents of portA Istatus
-	andi a3,a3,0x00000040			# and with 0x08 to isolate PA6 status
+	andi a3,a3,0x00000010			# and with 0x10 to isolate PD4 status
 	beqz a3,next_date			# if 0 branch to label next date	
 	j scan_save_date
 next_date:
@@ -1774,7 +1775,7 @@ scan_save_month:				# save button is checked for user input
 scan_next_month:				# next button is scanned for user input
 	la a4,R32_GPIOD_INDR			# load a4 with PortA base address
 	lw a3,0(a4)				# load a3 with contents of portA Istatus
-	andi a3,a3,0x00000040			# and with 0x08 to isolate PA6 status
+	andi a3,a3,0x00000010			# and with 0x10 to isolate PD4 status
 	beqz a3,next_month			# if 0 branch to label next month	
 	j scan_save_month			# loops to scan_save_month label until user takes a decision on saving or next
 next_month:
@@ -1826,7 +1827,7 @@ scan_save_year:
 scan_next_year:	
 	la a4,R32_GPIOD_INDR			# load a4 with PortD base address
 	lw a3,0(a4)				# load a3 with contents of portD Istatus
-	andi a3,a3,0x00000040			# and with 0x08 to isolate PD4 status
+	andi a3,a3,0x00000010			# and with 0x10 to isolate PD4 status
 	beqz a3,next_year			# if 0 branch to label next year	
 	j scan_save_year
 next_year:
