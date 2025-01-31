@@ -103,11 +103,11 @@ MADCTL_MH  = 0x04
 #I2C_SDA 		= PD0 # I2C  data on PD0 (reccomended external pullup 4.7k)
 #UART_TX		= PD5
 #UART_RX                = PD6
-#save_switch            = PD3
-#next_switch            = PD4
-#menu_switch            = PD2
-#audio_switch           = PC4
-#DFplayer control       = PC7
+#save_switch            = PD3 # input with pullup
+#next_switch            = PD4 # input with pullup
+#menu_switch            = PD2 # input with pullup
+#audio_switch           = PC4 # input with pullup
+#DFplayer control       = PC0 # pushpull output
 #########################################   VARIABLES
 fclk 		= 24000000   		# 24Mhz RCO internal , AHB =8Mhz by default
 state 		= 0x2000000C 		# located in SRAM
@@ -568,123 +568,44 @@ finish:
 .align 4
 	call CLEAR_SCREEN		# macro clear screen to blackout screen
 
-	FILLSCREEN COLOR_BLUE		# macro FILLSCREEN called with blue colour
-	li x6,2000000
-	call delay			# approx 1 second delay
-	FILLSCREEN COLOR_RED		# macro FILLSCREEN called with red colour
-	li x6,2000000
-	call delay			# approx 1 second delay
-	FILLSCREEN COLOR_GREEN		# macro FILLSCREEN called with green colour
-	li x6,2000000
-	call delay			# approx 1 second delay
-	FILLSCREEN COLOR_MAGENTA	# macro FILLSCREEN called with magenta colour
-	li x6,2000000
-	call delay			# approx 1 second delay
-	FILLSCREEN COLOR_CYAN		# macro FILLSCREEN called with cyan colour
-	li x6,2000000
-	call delay			# approx 1 second delay
-	FILLSCREEN COLOR_YELLOW		# macro FILLSCREEN called with yellow colour
-	li x6,2000000
-	call delay			# approx 1 second delay
-
-	SETCURSOR 0, 0, 15, 31		# x = 0 ,y =0, x1 =15, y1 =31 ,sets cursor/window in order of x,y,x1,y1 (macro)
-
-	fontcolor COLOR_RED		# stores RED colour for font in FONTCOLOR variable (macro)
-	bgcolor COLOR_WHITE		# stores white colour for font background in FONTCOLOR variable (macro)
-
-	PRINT 'Z'			# macro searches and prints an ascii character, call after setting window , font colour
-	li x6,2000000
-	call delay			# approx 1 second delay
-
-	call push_cursor1		# moves cursor to next legal position on the screen 128x160,new window will be created with off set based on the set window data
-	PRINT 'b'			# prints default 16x32 fonts
-	li x6,2000000
-	call delay			# approx 1 second delay
-
-	SETCURSOR 0, 0, 31, 63		# x = 0 ,y =0, x1 =31, y1 =63
-	fontcolor COLOR_MAGENTA		# set font colour magenta (macro)
-	bgcolor COLOR_WHITE		# set background colour white(macro)
-	li x15,'9'			# char to be enlarged and printed
-	call select_font		# subroutine calculates address of font in x15 register and loads it to variable "state"in SRAM
-	call DRAW_CHAR_DOUBLE		# subroutine multiplies default 16x32 in this code to 32x64 font
-	li x6,2000000
-	call delay			# approx 1 second delay
-
-	FILLSCREEN COLOR_WHITE		#
-	SETCURSOR 0, 0, 15, 31		# x = 0 ,y =0, x1 =15, y1 =31
-
-					# below loop will print all character in the font table with 1 second delay 16x32 default
-	li x15,' '			# laod space in x15 , font array starts with ascii " "
-	la x10,mem			# point to variable mem in sram with x10 register
-	sb x15,0(x10)			# store byte ' ' in mem
-	li x14,0x80			# load 0x80/128 which is total count of ascii characters in the font look up table
-loopall:
-	call select_font		# call subroutine to locate address of font in x15 and load it in variable state
-	call DRAW_CHAR32		# call subroutine to print 16x32 font pointed by the cursor
-	call push_cursor1		# move cursor one box ahead for the next char
-	li x6,2000000
-	call delay			# approx 1 second delay
-	la x10,mem			# point to variable mem in sram with x10 register
-	lb x15,0(x10)			# reload the already printed char again as x15 is changed while writing char
-	addi x15,x15,1			# increase by 1 the ascii value
-	sb x15,0(x10)			# store the new char in mem
-	bne x15,x14,loopall		# check whether x15 is equal to 0x80 stored in x14
-
-	drawRECTANGLE 10,10,40,50,COLOR_BLACK     # draws a unfilled rectangle with black lines
-
-	fillRECTANGLE 50,50,100,100,COLOR_GREEN	  # draws a filled rectangle in green colour
-
-
-	call CLEAR_SCREEN	# macro clear screen to blackout screen
-
-
-	la x10,buffer2
-	li x7,0x323214		# byte2 =x,byte1=y,byte0=r ,50,50,20 in hex
-	sw x7,0(x10)
-	la x10, XYCOLOUR
-	li x7,COLOR_WHITE
-	slli x7,x7,16
-	sw x7,0(x10)
-	call fillCircle
-
-
-
-	la x10,buffer2
-	li x7,0x646419		# byte2 =x,byte1=y,byte0=r ,50,50,20 in hex
-	sw x7,0(x10)
-	call fillCircle
-here:
-	j here
-
-	call clear_screen
-	call time_buffer_for_OLED
-	SETCURSOR 0 0 15 31
-	call print_time
-	call display_date_buffer
-	SETCURSOR 0 40 15 71
-	call print_date
-	SETCURSOR 0 80 15 111
-	call print_week
-
+	
+main_loop:
 
 check_sw:
 	la a4,R32_GPIOD_INDR	# load a4 with PortD base address
 	lw a3,0(a4)		# load a3 with contents of portD Istatus
 	andi a3,a3,0x00000004	# and with 0x04 to isolate PD2 status
-	bnez a3,date_sw		# if 1 branch to label no menu. If PD0 pressed time set menu is called else go to time display/update
-	call menu		# calls routine to 
+	bnez a3,voice_sw		# if 1 branch to label no menu. If PD0 pressed time set menu is called else go to time display/update
+	call menu		# calls routine to adjust and set time
 
 voice_sw:
-	la a4,R32_GPIOD_INDR	# load a4 with PortD base address
+	la a4,R32_GPIOC_INDR	# load a4 with PortC base address
 	lw a3,0(a4)		# load a3 with contents of portD Istatus
-	andi a3,a3,0x00000004	# and with 0x04 to isolate PD2 status
-	bnez a3,show_time	# if 1 branch to label no menu. If PD2 pressed time set menu is called else go to time display/update
-	call start_audio		# calls routine to
+	andi a3,a3,0x00000010	# and with 0x04 to isolate PC2 status
+	bnez a3,show_time	# if 1 branch to label no menu. If PC2 pressed time set menu is called else go to time display/update
+	call start_audio	# calls routine to play audio track
 
 
+show_time:
+	call I2C_START 		# send start condition on I2C bus
+	li a5,DS1307WAD 	# radio random read address
+	call SEND_ADDRESS 	# call subroutine to send address
+	li a5,0x00 		# clock register 0x00 is set as pointer
+	call I2C_WRITE 		# call subroutine to transmit value loaded in a0
+	call clock_read 	# reads 7 bytes from clock register 
+	call BCD_ASCII		# converts BCD to ASCII values
+	call time_buffer_for_OLED# rearranges converted ASCII characters in HR:MIN:SEC format, address clock display , 8 bytes for time 
+	SETCURSOR 0 0 15 31
+	bgcolor COLOR_BLACK
+	fontcolor COLOR_WHITE		
+	call print_time
+	call display_date_buffer
+	SETCURSOR 0 40 15 71
+	call print_date
+	SETCURSOR 0 80 15 111
+	call print_week	
 
-
-
+	j main_loop
 
 
 
@@ -1129,14 +1050,15 @@ print_time:
 	sw ra,0(sp)		# push RA
 	sw x3,4(sp)
 	sw a1,8(sp)
-	li x3,8
-	la a1,buffer
+	li x3,8			# number of bytes
+	la a1,buffer		# load address buffer , print date routine reads from buffer
+	addi a1,a1,7		# time stored in reverse order in clock display, read from buffer+7 backwards
 print_time_loop:
-	lbu a5,0(a1)
-	call select_font
-	call DRAW_CHAR32
+	lbu a5,0(a1)		# load byte from buffer
+	call select_font	# select the correct font for the ascii char
+	call DRAW_CHAR32	# call routine to draw the char in screen
 	call push_cursor1	# move cursor one box ahead for the next char
-	addi a1,a1,1		# increase address by 16 , one char array
+	addi a1,a1,-1		# increase address by 16 , one char array
 	addi x3,x3,-1		# increase t1 counter 1
 	bnez x3,print_time_loop	# if a3 is not equal to t1 loop
 	lw a1,8(sp)
@@ -1897,23 +1819,6 @@ time_set_loop:
 	addi sp,sp,16
 	ret
 ################################################################################
-#display_day_buffer , assembles  day in buffer - day of week
-#################################################################################
-display_day_buffer:
-	addi sp,sp,-16
-	sw ra,0(sp)
-	sw x4,4(sp)
-	sw a2,8(sp)
-	sw a3,12(sp)
-	la a2,clock_display		# point address of clock display with a2
-	addi a2,a2,8			# clock_display+6=day1 sec2byte,minute2byte,hour2byte,day1byte,date2byte,month2byte,year2byte
-
-
-
-
-
-
-
 
 
 ###################################################################################################################
@@ -2955,6 +2860,8 @@ FONT_COLOUR:
 	ret
 
 ############################################################################
+# push_cursor1 , pushes cursor for 16x32 pixel font
+############################################################################
 
 push_cursor1:
 	addi sp,sp,-24
@@ -2976,13 +2883,13 @@ push_cursor1:
 	li x6, width		# 128 pixels
 	bltu x5,x6,hpush	# if less than 128 pixels branch to hpush
 				# reset x to 0 and increase y by height of font
-	addi x10,x10,3		#old y1
+	addi x10,x10,3		# old y1
 	lb x7,0(x10)		# loa old y1
 	addi x11,x11,2		# store in x11 new y0
 	sb x7,0(x11)		# store new y0
-	addi x10,x10,-1		#y0
-	lb x5,0(x10)		#old y0
-	sub x5,x7,x5		#old y1-y0 = height
+	addi x10,x10,-1		# y0
+	lb x5,0(x10)		# old y0
+	sub x5,x7,x5		# old y1-y0 = height
 	add x5,x7,x5		# new y0 + height = new y1
 	li x6,height		# 160 pixels
 	bltu x5,x6,vpush	# if height less than 160 pixels branch  to vpush
