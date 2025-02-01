@@ -569,7 +569,7 @@ finish:
 	call CLEAR_SCREEN		# macro clear screen to blackout screen
 
 	
-main_loop:
+
 
 check_sw:
 	la a4,R32_GPIOD_INDR	# load a4 with PortD base address
@@ -605,7 +605,7 @@ show_time:
 	SETCURSOR 0 80 15 111
 	call print_week	
 
-	j main_loop
+	j check_sw
 
 
 
@@ -1101,15 +1101,15 @@ print_week:
 	la a2,week			# variable in SRAM , holds address of string of current week day.
 	lw a5,0(a2)			# load the address of the week string to a5
 	mv a2,a5			# copy from a5 to a2 register. now a2 register has the address of the null terminated string (eg "monday ")
-sr_loop:
+week_loop:
     	lb a5, 0(a2)             	# Load the current byte (character) into a1
-    	beq a5, zero, end_loop   	# If character is null (0), exit the loop
+    	beq a5, zero, wend_loop   	# If character is null (0), exit the loop
 	call select_font		# subroutine to calculate the address of the font in table
 	call DRAW_CHAR32		# subroutine to write the fint on the ST LCD
 	call push_cursor1		# move cursor one box ahead for the next char
 	addi a2,a2,1           		# increase address by 1 for next byte
-	j sr_loop             		# Repeat the loop
-end_loop:
+	j week_loop             		# Repeat the loop
+wend_loop:
 	lw a2,4(sp)
 	lw ra,0(sp)
 	addi sp,sp,8
@@ -1410,13 +1410,13 @@ menu:
 	li x3,0			# load 0 in x3
 	la s1,clock_display	# point s1 to clock_display (sram)
 	sb x3,0(s1)		# store 0 seconds at clock_display0		
-	call clear_screen	# clear OLED
+	call CLEAR_SCREEN	# clear OLED
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 	la a2,mes2		# " adj minutes",0
 	call string_reader	# send above sring to OLED
 	call delay1S		#  second delay for display message
 	call delay1S
-	call clear_screen	# clear screen
+	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 min_start:
 	li x4,59		# counter 59 for 60 minutes
@@ -1428,16 +1428,14 @@ min_loop:
 	andi x3,x3,0xf0		# extract the top nibble
 	srli x3,x3,4		# right shift 4 to get the nibble in the lower side
 	ori x3,x3,0x30		# OR with 0x30(ascii0)to convert the nibble to ASCII char
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call push_cursor1	# move cursor one box ahead for the next char
 	lb x3,0(a2)		# load the sane BCD again to process the lower nibble
 	andi x3,x3,0x0f		# extract the lower nibble by AND ing with 0x0f
 	ori x3,x3,0x30		# OR with ASCII 0 to convert it to ascii char
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call delay1S		# delay of 1 second for human requirement
@@ -1466,13 +1464,13 @@ save_min:
 
 
 
-	call clear_screen	# clear screen
+	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 	la a2,mes1
 	call string_reader
 	call delay1S
 	call delay1S
-	call clear_screen	# clear screen
+	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 hour_start:
 	li x4,24				# counter 24 for 24 hour
@@ -1484,16 +1482,14 @@ hour_loop:
 	andi x3,x3,0xf0
 	srli x3,x3,4
 	ori x3,x3,0x30
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call push_cursor1	# move cursor one box ahead for the next char
 	lb x3,0(a2)
 	andi x3,x3,0x0f
 	ori x3,x3,0x30
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call push_cursor1	# move cursor one box ahead for the next char
@@ -1508,7 +1504,7 @@ scan_save:
 scan_next:	
 	la a4,R32_GPIOD_INDR			# load a4 with PortA base address
 	lw a3,0(a4)				# load a3 with contents of portA Istatus
-	andi a3,a3,0x00000040			# and with 0x08 to isolate PA6 status
+	andi a3,a3,0x00000010			# and with 0x08 to isolate PA6 status
 	beqz a3,next_hr				# if 0 branch to label next hour	
 	j scan_save
 next_hr:
@@ -1523,13 +1519,13 @@ save_hr:
 
 
 
-	call clear_screen	# clear screen
+	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 	la a2,mes3				# save day
 	call string_reader
 	call delay1S
 	call delay1S
-	call clear_screen	# clear screen
+	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 day_start:
 	li x4,7					# counter 24 for 24 hour
@@ -1541,16 +1537,14 @@ day_loop:
 	andi x3,x3,0xf0
 	srli x3,x3,4
 	ori x3,x3,0x30
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call push_cursor1	# move cursor one box ahead for the next char
 	lb x3,0(a2)
 	andi x3,x3,0x0f
 	ori x3,x3,0x30
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call push_cursor1	# move cursor one box ahead for the next char
@@ -1565,7 +1559,7 @@ scan_save_day:
 scan_next_day:	
 	la a4,R32_GPIOD_INDR			# load a4 with PortA base address
 	lw a3,0(a4)				# load a3 with contents of portA Istatus
-	andi a3,a3,0x00000040			# and with 0x08 to isolate PA6 status
+	andi a3,a3,0x00000010			# and with 0x08 to isolate PA6 status
 	beqz a3,next_day			# if 0 branch to label next day	
 	j scan_save_day
 next_day:
@@ -1580,13 +1574,13 @@ save_day:
 
 
 
-	call clear_screen	# clear screen
+	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 	la a2,mes6				# "adj date ",0
 	call string_reader
 	call delay1S
 	call delay1S
-	call clear_screen	# clear screen
+	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 date_start:
 	li x4,31				# counter 12 for 12 month
@@ -1598,16 +1592,14 @@ date_loop:
 	andi x3,x3,0xf0
 	srli x3,x3,4
 	ori x3,x3,0x30
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call push_cursor1	# move cursor one box ahead for the next char
 	lb x3,0(a2)
 	andi x3,x3,0x0f
 	ori x3,x3,0x30
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call push_cursor1	# move cursor one box ahead for the next char
@@ -1622,7 +1614,7 @@ scan_save_date:
 scan_next_date:	
 	la a4,R32_GPIOD_INDR			# load a4 with PortA base address
 	lw a3,0(a4)				# load a3 with contents of portA Istatus
-	andi a3,a3,0x00000040			# and with 0x08 to isolate PA6 status
+	andi a3,a3,0x00000010			# and with 0x08 to isolate PA6 status
 	beqz a3,next_date			# if 0 branch to label next date	
 	j scan_save_date
 next_date:
@@ -1638,13 +1630,13 @@ save_date:
 
 
 
-	call clear_screen	# clear screen
+	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 	la a2,mes4				# "adj month ",0
 	call string_reader			# display message in oled
 	call delay1S				# delay 2 seconds for user
 	call delay1S
-	call clear_screen	# clear screen
+	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 month_start:
 	li x4,12				# counter 12 for 12 month
@@ -1656,16 +1648,14 @@ month_loop:
 	andi x3,x3,0xf0				# as BCD has 2digits encoded in byte ,and with 0xf0 to extract MSB
 	srli x3,x3,4				# shift 4 right to isolate MSB into lower nibble
 	ori x3,x3,0x30				# or with ascii 0 (0x30) to convert BCD to ASCII char
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call push_cursor1	# move cursor one box ahead for the next char
 	lb x3,0(a2)				# load same BCD again to process the lower byte of the number
 	andi x3,x3,0x0f				# extract LSB by anding with 0x0f
 	ori x3,x3,0x30				# convert to ascii by OR ing with 0x30
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call push_cursor1	# move cursor one box ahead for the next char
@@ -1680,7 +1670,7 @@ scan_save_month:				# save button is checked for user input
 scan_next_month:				# next button is scanned for user input
 	la a4,R32_GPIOD_INDR			# load a4 with PortA base address
 	lw a3,0(a4)				# load a3 with contents of portA Istatus
-	andi a3,a3,0x00000040			# and with 0x08 to isolate PA6 status
+	andi a3,a3,0x00000010			# and with 0x08 to isolate PA6 status
 	beqz a3,next_month			# if 0 branch to label next month	
 	j scan_save_month			# loops to scan_save_month label until user takes a decision on saving or next
 next_month:
@@ -1696,13 +1686,13 @@ save_month:
 
 
 
-	call clear_screen	# clear screen
+	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 	la a2,mes5				# "adj year ",0
 	call string_reader
 	call delay1S
 	call delay1S
-	call clear_screen	# clear screen
+	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 year_start:
 	li x4,99				# counter 12 for 12 month
@@ -1714,16 +1704,14 @@ year_loop:
 	andi x3,x3,0xf0
 	srli x3,x3,4
 	ori x3,x3,0x30
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call push_cursor1	# move cursor one box ahead for the next char
 	lb x3,0(a2)
 	andi x3,x3,0x0f
 	ori x3,x3,0x30
-	mv  x5, x3
-	call printchar		# call print cahar routine to display the 10th position of the number in OLED
+	mv  x15, x3
 	call select_font
 	call DRAW_CHAR32
 	call push_cursor1	# move cursor one box ahead for the next char
@@ -1738,7 +1726,7 @@ scan_save_year:
 scan_next_year:	
 	la a4,R32_GPIOD_INDR			# load a4 with PortD base address
 	lw a3,0(a4)				# load a3 with contents of portD Istatus
-	andi a3,a3,0x00000040			# and with 0x08 to isolate PD4 status
+	andi a3,a3,0x00000010			# and with 0x08 to isolate PD4 status
 	beqz a3,next_year			# if 0 branch to label next year	
 	j scan_save_year
 next_year:
@@ -1888,7 +1876,7 @@ start_audio:
 DF_ON:
 	la x10,R32_GPIOC_BSHR		# R32_GPIOC_BSHR register sets and resets GPIOC pins, load address into pointer x10
 	lw x11,0(x10)			# load contents to x11
-	li x7,(1<<3)			# set pc3 by shifting 1 to bit position 4
+	li x7,(1<<0)			# set pc0 by shifting 1 to bit position 0
 	or x11,x11,x7			# OR with x11
 	sw x11,0(x10)			# store x11 to R32_GPIOC_BSHR
 
@@ -2041,7 +2029,7 @@ multiply5:
 DF_OFF:
 	la x10,R32_GPIOC_BSHR		# R32_GPIOD_BSHR register sets and resets GPIOC pins, load address into pointer x10
 	lw x11,0(x10)			# load contents to x11
-	li x7,1<<19			# reset pc3 by shifting 1 into bit position 20 of R32_GPIOD_BSHR
+	li x7,1<<16			# reset pc0 by shifting 1 into bit position 16 of R32_GPIOD_BSHR
 	or x11,x11,x7			# OR with x11
 	sw x11,0(x10)			# store x11 to R32_GPIOC_BSHR
 
@@ -2058,41 +2046,6 @@ DF_OFF:
 
 
 #########################################################################
-
-.align 4
-#########################################################################
-#  USART ROUTINES
-#########################################################################
-
-USART_TX:
-	addi sp,sp,-16			# add space in stack
-	sw ra,0(sp)			# push ra
-	sw x7,4(sp)			# push x7
-	sw x10,8(sp)			# push x10
-	sw x11,12(sp)			# push x11
-
-	la x10,R32_USART_STATR		# load address of usart status register
-	lw x11,0(x10)			# load contents of status register in x11
-	andi x11,x11,(1<<7)		# mask out 7th bit, transmit buffer empty flag
-	beqz x11,USART_TX		# if 0 transmit buffer full, wait until bit is set
-	#li x8,0x30
-	mv x7,x8			# move byte in x8 to x7
-	la x10,R32_USART_DATAR		# x10 has the address of data register
-	sb x7,0(x10)			#store byte in x7 to data register
-TC_check:
-	la x10,R32_USART_STATR		# get contents of status register again
-	lw x11,0(x10)
-	andi x11,x11,(1<<6)		# check transmit complete bit
-	beqz x11,TC_check		# wait if bit is 0 , when transmit complete = 1
-		
-	lw x11,12(sp)			# pop x11
-	lw x10,8(sp)			# pop x10
-	lw x7,4(sp)			# pop x7
-	lw ra,0(sp)			# pop ra
-	addi sp,sp,16			# set SP back 16 bytes
-	ret				# return to caller	
-
-
 
 		
 #########################################################################
