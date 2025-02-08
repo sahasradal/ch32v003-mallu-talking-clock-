@@ -1138,8 +1138,14 @@ end_loop:
 #menu- adjust/set seconds,minutes,hour,day,date,month,year and store in RTC
 ###################################################################################
 menu:
-	addi sp,sp,-4
+	addi sp,sp,-28
 	sw ra,0(sp)
+	sw x3,4(sp)
+	sw s1,8(sp)
+	sw a2,12(sp)
+	sw x4,16(sp)
+	sw a3,20(sp)
+	sw x15,24(sp)
 	li x3,0			# load 0 in x3
 	la s1,clock_display	# point s1 to clock_display (sram)
 	sb x3,0(s1)		# store 0 seconds at clock_display0		
@@ -1475,6 +1481,120 @@ save_year:
 	addi s1,s1,6
 	sb x3,0(s1)				# month BCD in clock_display 6
 
+
+	call CLEAR_SCREEN	# clear screen
+	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
+	la a2,mes7				# "language",0
+	call string_reader
+	call delay1S
+	call delay1S
+	call CLEAR_SCREEN	# clear screen
+	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
+lang_start:
+	li x4,8				# 9 languages
+	la a2,number
+	la s1,language
+lang_loop:
+	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
+	lb x3,0(a2)
+	andi x3,x3,0xf0
+	srli x3,x3,4
+	ori x3,x3,0x30
+	mv  x15, x3
+	call select_font
+	call DRAW_CHAR32
+	call push_cursor1	# move cursor one box ahead for the next char
+	lb x3,0(a2)
+	andi x3,x3,0x0f
+	ori x3,x3,0x30
+	mv  x15, x3
+	call select_font
+	call DRAW_CHAR32
+	call push_cursor1	# move cursor one box ahead for the next char
+	SETCURSOR 0 40 15 71	# set cursor at x0y40
+	lb x3,0(a2)
+	beqz x3,malayalam
+	li x5,1
+	beq x3,x5,tamil
+	li x5,2
+	beq x3,x5,kannada
+	li x5,3
+	beq x3,x5,telugu
+	li x5,4
+	beq x3,x5,hindi
+	li x5,5
+	beq x3,x5,gujarati
+	li x5,6
+	beq x3,x5,punjabi
+	li x5,7
+	beq x3,x5,english
+	li x5,8
+	beq x3,x5,bengali
+
+
+malayalam:
+	la a3,mal
+	call string_reader1
+	j finfin
+tamil:
+	la a3,tam
+	call string_reader1
+	j finfin
+kannada:
+	la a3,kan
+	call string_reader1
+	j finfin
+telugu:
+	la a3,tel
+	call string_reader1
+	j finfin
+hindi:
+	la a3,hin
+	call string_reader1
+	j finfin
+gujarati:
+	la a3,guj
+	call string_reader1
+	j finfin
+punjabi:
+	la a3,pun
+	call string_reader1
+	j finfin
+english:
+	la a3,eng
+	call string_reader1
+	j finfin
+bengali:
+	la a3,ben
+	call string_reader1
+finfin:
+
+	call delay1S
+	addi a2,a2,1
+	addi x4,x4,-1
+scan_save_lang:
+	la a4,R32_GPIOD_INDR			# load a4 with PortD base address
+	lw a3,0(a4)				# load a3 with contents of portD Istatus
+	andi a3,a3,0x00000008			# and with 0x08 to isolate PD3 status
+	beqz a3,save_lang			# if 0 branch to label save year	
+scan_next_lang:	
+	la a4,R32_GPIOD_INDR			# load a4 with PortD base address
+	lw a3,0(a4)				# load a3 with contents of portD Istatus
+	andi a3,a3,0x00000010			# and with 0x08 to isolate PD4 status
+	beqz a3,next_lang			# if 0 branch to label next year	
+	j scan_save_lang
+next_lang:
+	beqz x4,lang_start	
+	j lang_loop
+save_lang:
+	addi a2,a2,-1				# number address was advanced earlier 1 byte anticipating a next button press , go back 1 byte and store it
+	lb x3,0(a2)
+	la s1,language
+	sb x3,0(s1)				# language BCD in language
+
+
+
+
 clock_update:
 	call I2C_START 				# send start condition on I2C bus
 	li x7,DS1307WAD 			# clock write address
@@ -1499,8 +1619,14 @@ time_set_loop:
 	addi x3,x3,-1
 	bnez x3,time_set_loop
 	call I2C_STOP 				# call subroutine to terminate I2C operation
+	lw x15,24(sp)
+	lw a3,20(sp)
+	lw x4,16(sp)
+	lw a2,12(sp)
+	lw s1,8(sp)
+	lw x3,4(sp)
 	lw ra,0(sp)
-	addi sp,sp,4
+	addi sp,sp,28
 	ret
 
 ################################################################################
@@ -6023,6 +6149,16 @@ mes3:.asciz  "adj day"
 mes4:.asciz  "adj mon"
 mes5:.asciz  "adj year"
 mes6:.asciz  "adj date"
+mes7:.asciz  "language"
+mal:.asciz "malyalam"
+tam:.asciz "tamil"
+kan:.asciz "kannada"
+tel:.asciz "telgu"
+hin:.asciz "hindi"
+guj:.asciz "gujrati"
+pun:.asciz "punjabi"
+eng:.asciz "english"
+ben:,asciz "bengali"
 mon:.asciz "Monday"
 tue:.asciz "Tuesday"
 wed:.asciz "Wednesdy"
