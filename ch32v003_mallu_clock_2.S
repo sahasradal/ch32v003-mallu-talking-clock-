@@ -1,93 +1,149 @@
-SRAM_start = 0x20000000
-SRAM_end   = 0x20000800	
-STACK = 0x20000800
-fclk = 24000000   			# 24Mhz RCO internal 
-.equ R32_RCC_APB2PCENR, 0x40021018
-.equ R32_GPIOC_CFGLR, 0x40011000
-.equ R32_GPIOD_CFGLR, 0x40011400
-.equ R32_GPIOD_OUTDR, 0x4001140C
-.equ R32_USART_BRR, 0x40013808
-.equ R32_USART_CTLR1, 0x4001380C
-.equ R32_RCC_APB1PRSTR, 0x40021010 
-.equ R16_SPI_CTLR1, 0x40013000
-.equ R16_SPI_CTLR2, 0x40013004
-.equ R16_SPI_CTLR1, 0x40013000
-.equ R32_USART_STATR, 0x40013800
-.equ R32_USART_DATAR, 0x40013804
-.equ R16_SPI_STATR, 0x40013008
-.equ R16_SPI_DATAR, 0x4001300C
-.equ R32_GPIOC_BSHR, 0x40011010 
+#riscv32-unknown-elf-as -g ch32v003_mallu_clock_3.S -o ch32v003_mallu_clock_3.o
+#riscv32-unknown-elf-ld -T CH32V003.ld -Map=final.map ch32v003_mallu_clock_3.O
+#riscv32-unknown-elf-objcopy -O ihex a.out ch32v003_mallu_clock_3.hex
+
+.equ SRAM_start, 0x20000000
+.equ SRAM_end, 0x20000800
+.equ STACK, 0x20000800
+.equ TIM2_BASE, 0x40000000
+.equ W_WDG_BASE, 0x40002C00
+.equ I_WDG_BASE, 0x40003000
+.equ I2C_BASE, 0x40005400
+.equ PWR_BASE, 0x40007000
+.equ AFIO_BASE, 0x40010000
+.equ EXTI_BASE, 0x40010400
+.equ PORTA_BASE, 0x40010800
+.equ PORTC_BASE, 0x40011000
+.equ PORTD_BASE, 0x40011400
+.equ ADC_BASE, 0x40012400
+.equ TIM1_BASE, 0x40012C00
+.equ SPI_BASE, 0x40013000
+.equ USART_BASE, 0x40013800
+.equ DMA_BASE, 0x40020000
+.equ RCC_BASE, 0x40021000
+.equ FLASH_INTERFACE_BASE, 0x40022000
+.equ EXTENDED_MEM_BASE, 0x40023800
+.equ CORE_PRIVATE_BASE, 0xE0000000
+.equ FLASH_BASE, 0x08000000
+.equ R32_RCC_CTLR, 0x40021000 #Clock control register 0x0000xx83
+.equ R32_RCC_CFGR0, 0x40021004 #Clock configuration register 0 0x00000000
+.equ R32_RCC_INTR, 0x40021008 #Clock interrupt register 0x00000000
+.equ R32_RCC_APB2PRSTR, 0x4002100C #APB2 peripheral reset register 0x00000000
+.equ R32_RCC_APB1PRSTR, 0x40021010 # APB1 peripheral reset register 0x00000000
+.equ R32_RCC_AHBPCENR, 0x40021014 #AHB peripheral clock enable register 0x00000014
+.equ R32_RCC_APB2PCENR, 0x40021018 #APB2 peripheral clock enable register 0x00000000
+.equ R32_RCC_APB1PCENR, 0x4002101C #APB1 peripheral clock enable register 0x00000000
+.equ R32_GPIOC_CFGLR, 0x40011000 #PC port configuration register low 0x44444444
+.equ R32_GPIOD_CFGLR, 0x40011400 #PD port configuration register low 0x44444444
+.equ R32_GPIOC_INDR, 0x40011008 #PC port input data register 0x0000XXXX
+.equ R32_GPIOD_INDR, 0x40011408 #PD port input data register 0x0000XXXX
+.equ R32_GPIOC_OUTDR, 0x4001100C #PC port output data register 0x00000000
+.equ R32_GPIOD_OUTDR, 0x4001140C #PD port output data register 0x00000000
+.equ R32_GPIOC_BSHR, 0x40011010 #PC port set/reset register 0x00000000
+.equ R32_GPIOD_BSHR, 0x40011410 #PD port set/reset register 0x00000000
+.equ R32_GPIOC_BCR, 0x40011014 #PC port reset register
+.equ R32_GPIOD_BCR, 0x40011414 #PD port reset register 0x00000000
+.equ R32_GPIOC_LCKR, 0x40011018 #PC port configuration lock register 0x00000000
+.equ R32_GPIOD_LCKR, 0x40011418 #PD port configuration lock register 
+.equ R32_AFIO_PCFR1, 0x40010004 #AFIO Remap Register 1
+.equ R32_AFIO_EXTICR, 0x40010008 #External interrupt configuration register 1
+.equ R32_USART_STATR, 0x40013800 #UASRT status register 0x000000C0
+.equ R32_USART_DATAR, 0x40013804 #UASRT data register 0x000000XX
+.equ R32_USART_BRR, 0x40013808 #UASRT baud rate register 0x00000000
+.equ R32_USART_CTLR1, 0x4001380C #UASRT control register 1 0x00000000
+.equ R32_USART_CTLR2, 0x40013810 #UASRT control register 2 0x00000000
+.equ R32_USART_CTLR3, 0x40013814 #UASRT control register 3 0x00000000
+.equ R32_USART_GPR, 0x40013818 #UASRT protection time and prescaler register
+.equ R16_SPI_CTLR1, 0x40013000 #SPI Control register1 0x0000
+.equ R16_SPI_CTLR2, 0x40013004 #SPI Control register2 0x0000
+.equ R16_SPI_STATR, 0x40013008 #SPI Status register 0x0002
+.equ R16_SPI_DATAR, 0x4001300C #SPI Data register 0x0000
+.equ R16_SPI_CRCR,  0x40013010 #SPI Polynomial register 0x0007
+.equ R16_SPI_RCRCR, 0x40013014 #SPI Receive CRC register 0x0000
+.equ R16_SPI_TCRCR, 0x40013018 #SPI Transmit CRC register 0x0000
+.equ R16_SPI_HSCR,  0x40013024 #SPI High-speed control register
+.equ R32_GPIOA_OUTDR, 0x4001080C 	#PA port output data register 0x00000000
+.equ R32_GPIOA_INDR, 0x40010808 	#PA port input data register 0x0000XXXX
+.equ R32_GPIOA_CFGLR, 0x40010800 	#PA port configuration register low 0x44444444
+.equ R32_GPIOA_BSHR, 0x40010810 	#PA port set/reset register 0x00000000
+.equ R32_GPIOA_BCR, 0x40010814 	#PA port reset register 0x00000000
+##/*--------------Control Command DF MP3 player--------------*/
+
+
+.equ CMD_SET_VOLUME,        0x06 # Set volume (0 -> 30)
+.equ CMD_SELECT_DEVICE,     0x09 # Select storage device (microSD: 2)
+.equ CMD_RESET,             0x0C # Chip reset
+.equ CMD_PLAY_FOLDER_FILE,  0x0F # Play the song with folder and song name
+##/*---------------Query Command DF MP3 player---------------*/
+
 
 #ST7735 1.8inch 128 x 160 LCD
 
-COLOR_BLACK 	= 0x0000
-COLOR_WHITE 	= 0xffff
-COLOR_RED 	= 0xf800
-COLOR_GREEN 	= 0x07e0
-COLOR_BLUE 	= 0x001f
-COLOR_MAGENTA 	= 0xf81f
-COLOR_CYAN 	= 0xffe0
-COLOR_YELLOW 	= 0x07ff
-ST7735_NOP   	= 0x00
-ST7735_SWRESET = 0x01
-ST7735_RDDID   = 0x04
-ST7735_RDDST   = 0x09
-ST7735_SLPIN   = 0x10
-ST7735_SLPOUT  = 0x11
-ST7735_PTLON   = 0x12
-ST7735_NORON   = 0x13
+.equ COLOR_BLACK, 0x0000
+.equ COLOR_WHITE, 0xffff
+.equ COLOR_RED, 0xf800
+.equ COLOR_GREEN, 0x07e0
+.equ COLOR_BLUE, 0x001f
+.equ COLOR_MAGENTA, 0xf81f
+.equ COLOR_CYAN, 0xffe0
+.equ COLOR_YELLOW, 0x07ff
+.equ ST7735_NOP, 0x00
+.equ ST7735_SWRESET, 0x01
+.equ ST7735_RDDID, 0x04
+.equ ST7735_RDDST, 0x09
+.equ ST7735_SLPIN,  0x10
+.equ ST7735_SLPOUT,  0x11
+.equ ST7735_PTLON, 0x12
+.equ ST7735_NORON, 0x13
 
-ST7735_INVOFF  = 0x20
-ST7735_INVON   = 0x21
-ST7735_DISPOFF = 0x28
-ST7735_DISPON  = 0x29
-ST7735_CASET   = 0x2A
-ST7735_RASET   = 0x2B
-ST7735_RAMWR   = 0x2C
-ST7735_RAMRD   = 0x2E
+.equ ST7735_INVOFF, 0x20
+.equ ST7735_INVON, 0x21
+.equ ST7735_DISPOFF, 0x28
+.equ ST7735_DISPON, 0x29
+.equ ST7735_CASET, 0x2A
+.equ ST7735_RASET, 0x2B
+.equ ST7735_RAMWR, 0x2C
+.equ ST7735_RAMRD, 0x2E
 
-ST7735_PTLAR   = 0x30
-ST7735_COLMOD  = 0x3A
-ST7735_MADCTL  = 0x36
+.equ ST7735_PTLAR, 0x30
+.equ ST7735_COLMOD, 0x3A
+.equ ST7735_MADCTL, 0x36
 
-ST7735_FRMCTR1 = 0xB1
-ST7735_FRMCTR2 = 0xB2
-ST7735_FRMCTR3 = 0xB3
-ST7735_INVCTR  = 0xB4
-ST7735_DISSET5 = 0xB6
+.equ ST7735_FRMCTR1, 0xB1
+.equ ST7735_FRMCTR2, 0xB2
+.equ ST7735_FRMCTR3, 0xB3
+.equ ST7735_INVCTR, 0xB4
+.equ ST7735_DISSET5, 0xB6
 
-ST7735_PWCTR1  = 0xC0
-ST7735_PWCTR2  = 0xC1
-ST7735_PWCTR3  = 0xC2
-ST7735_PWCTR4  = 0xC3
-ST7735_PWCTR5  = 0xC4
-ST7735_VMCTR1  = 0xC5
+.equ ST7735_PWCTR1, 0xC0
+.equ ST7735_PWCTR2, 0xC1
+.equ ST7735_PWCTR3, 0xC2
+.equ ST7735_PWCTR4, 0xC3
+.equ ST7735_PWCTR5, 0xC4
+.equ ST7735_VMCTR1, 0xC5
 
-ST7735_RDID1   = 0xDA
-ST7735_RDID2   = 0xDB
-ST7735_RDID3   = 0xDC
-ST7735_RDID4   = 0xDD
-
-ST7735_PWCTR6  = 0xFC
-
-ST7735_GMCTRP1 = 0xE0
-ST7735_GMCTRN1 = 0xE1
-DC_COMMAND =  0
-DC_DATA    =  0x40
-
-Rotat_UP    = 0x00
-Rotat_LEFT  = 0xa0	  
-Rotat_RIGHT = 0x60
-Rotat_DOWN  = 0xc0 
-width =  128
-height = 160
-MADCTL_MY =  0x80
-MADCTL_MX =  0x40
-MADCTL_MV =  0x20
-MADCTL_ML =  0x10
-MADCTL_RGB = 0x00
-MADCTL_BGR = 0x08
-MADCTL_MH  = 0x04
+.equ ST7735_RDID1,   0xDA
+.equ ST7735_RDID2,    0xDB
+.equ ST7735_RDID3,    0xDC
+.equ ST7735_RDID4,    0xDD
+.equ ST7735_PWCTR6, 0xFC
+.equ ST7735_GMCTRP1,  0xE0
+.equ ST7735_GMCTRN1,  0xE1
+.equ DC_COMMAND,   0
+.equ DC_DATA,      0x40
+.equ Rotat_UP, 0x00
+.equ Rotat_LEFT, 0xa0	  
+.equ Rotat_RIGHT, 0x60
+.equ Rotat_DOWN, 0xc0 
+.equ width,  128
+.equ height, 160
+.equ MADCTL_MY,  0x80
+.equ MADCTL_MX,   0x40
+.equ MADCTL_MV,   0x20
+.equ MADCTL_ML,   0x10
+.equ MADCTL_RGB, 0x00
+.equ MADCTL_BGR, 0x08
+.equ MADCTL_MH,  0x04
 ########
 # Default mapping (NSS/PC1, CK/PC5, MISO/PC7, MOSI/PC6).Push-pull multiplexed output for full duplex master mode, hardware NSS
 # MSB first ,CPL0,CHPA1,full duplex,hardware SS control
@@ -99,20 +155,20 @@ MADCTL_MH  = 0x04
 #CLK = PC5
 #MOSI= PC6
 #BL  = PC3
-#I2C_SCL 		= PD1 # I2C  clock on PD1 (reccomended external pullup 4.7k)
-#I2C_SDA 		= PD0 # I2C  data on PD0 (reccomended external pullup 4.7k)
+#I2C_SCL 		= PA2 # I2C  clock on PD1 (reccomended external pullup 4.7k)
+#I2C_SDA 		= PA1 # I2C  data on PD0 (reccomended external pullup 4.7k)
 #UART_TX		= PD5
 #UART_RX                = PD6
-#save_switch            = PD3 # input with pullup
-#next_switch            = PD4 # input with pullup
-#menu_switch            = PD2 # input with pullup
-#audio_switch           = PC4 # input with pullup
-#DFplayer control       = PC0 # pushpull output
-#########################################   VARIABLES
+#menu			= PD2
+#save			= PD3
+#next			= PD4
+#voice			= PD1
+#DFplayer               = PD0
+######################################### SRAM  VARIABLES
 fclk 		= 24000000   		# 24Mhz RCO internal , AHB =8Mhz by default
 state 		= 0x2000000C 		# located in SRAM
-result1 	= 0x20000010 		# 0x20000010 to 0x20000018 is used for storing result in decimal format
-result2 	= 0x20000014
+result11 	= 0x20000010 		# 0x20000010 to 0x20000018 is used for storing result in decimal format
+result22 	= 0x20000014
 fraction 	= 0x20000018
 fraction2  	= 0x2000001C
 result_lo 	= 0x20000020
@@ -142,9 +198,15 @@ buffer2		= 0x20000068
 .equ result2,  0x20000090 
 .equ result3,  0x20000094
 .equ week   ,  0x20000098
-.equ mem,  0x2000009C # 10 bytes used by print function from 0(mem)
-.equ mem1,  0x200000A0 # till 9(mem) , 2 bytes in mem1
+.equ language, 0x2000009C
+.equ mem,  0x200000A0 # 10 bytes used by print function from 0(mem)
+.equ mem1,  0x200000A4 # till 9(mem) , 2 bytes in mem1
 
+.equ DS1307WAD , 0xD0
+.equ DS1307RAD , 0xD1
+.equ read_data_len , 7
+.equ sda ,	0x00000002
+.equ scl ,	0x00000004
 
 .macro push val
   addi sp, sp, -4
@@ -198,179 +260,8 @@ buffer2		= 0x20000068
   call setTFTwindow
 .endm
 
-.macro drawHline x y x1 colour
-  la x10,XYC
-  li x15,\x
-  sb x15,0(x10)
-  addi x10,x10,1
-  li x15,\x1
-  sb x15,0(x10)
-  addi x10,x10,1
-  li x15,\y
-  sb x15,0(x10)
-  addi x10,x10,1
-  li x15,\y
-  sb x15,0(x10)
-  call setTFTwindow
-  la x10,XYCOLOUR		# point x11 to XYCOLOUR variable
-  addi x10,x10,2		# increase  address to byte2 , lo byte of colour
-  li x15,\colour		# load colour data supplied ,half word
-  sb x15,0(x10)			# store the low byte in XYCOLOUR byte2
-  srli x15,x15,8		# shift out low byte from x15 with only high byte remaining
-  addi x10,x10,1		# point to byte3 , hi byte of colour in XYCOLOUR
-  sb x15,0(x10)			# store hi byte of colour
-  call PIXEL_REPEAT1		# call PIXEL_REPEAT1 subroutine to print the pixels as per coordinates supplied in line2
-.endm
 
-.macro drawVline x y y1 colour
-  la x10,XYC
-  li x15,\x
-  sb x15,0(x10)
-  addi x10,x10,1
-  li x15,\x
-  sb x15,0(x10)
-  addi x10,x10,1
-  li x15,\y
-  sb x15,0(x10)
-  addi x10,x10,1
-  li x15,\y1
-  sb x15,0(x10)
-  call setTFTwindow
-  la x10,XYCOLOUR		# point x11 to XYCOLOUR variable
-  addi x10,x10,2		# increase  address to byte2 , lo byte of colour
-  li x15,\colour		# load colour data supplied ,half word
-  sb x15,0(x10)			# store the low byte in XYCOLOUR byte2
-  srli x15,x15,8		# shift out low byte from x15 with only high byte remaining
-  addi x10,x10,1		# point to byte3 , hi byte of colour in XYCOLOUR
-  sb x15,0(x10)			# store hi byte of colour
-  call PIXEL_REPEAT1		# call PIXEL_REPEAT1 subroutine to print the pixels as per coordinates supplied in line2
-.endm
-
-.macro drawRECTANGLE x y width height colour
-  la x10,XYC			# point x10 to variable XYC
-  li x15,\x
-  sb x15,0(x10)
-  addi x10,x10,1		# increase the XYC pointer to byte1
-  li x15,\width	
-  addi x15,x15,\x
-  sb x15,0(x10)			# store width
-  li x15,\y
-  addi x10,x10,1		# increase pointer to byte2 in XYC
-  sb x15,0(x10)			# store start of y
-  addi x10,x10,1		# increase pointer to byte3 in XYC
-  li x15,\y
-  sb x15,0(x10)			# start y is stored in byte3 XYC, y axis =0 , horizontal line drawn
-  call setTFTwindow
-  la x10,XYCOLOUR		# point x11 to XYCOLOUR variable
-  addi x10,x10,2		# increase  address to byte2 , lo byte of colour
-  li x15,\colour		# load colour data supplied ,half word
-  sb x15,0(x10)			# store the low byte in XYCOLOUR byte2
-  srli x15,x15,8		# shift out low byte from x15 with only high byte remaining
-  addi x10,x10,1		# point to byte3 , hi byte of colour in XYCOLOUR
-  sb x15,0(x10)			# store hi byte of colour
-  call PIXEL_REPEAT1		# call PIXEL_REPEAT1 subroutine to print the pixels as per coordinates supplied by macro
-  la x10,XYC			# point x10 to variable XYC
-  li x15,\x			# load x15 with x0 start
-  sb x15,0(x10)			# store in XYC byte0
-  addi x10,x10,1		# increase the XYC pointer to byte1
-  li x15,\x			# load x15 with x0 start
-  sb x15,0(x10)			# store width as x0, no horizontal component line will be vertical from start x,y
-  addi x10,x10,1		# point x10 to byte2 of the XYC
-  li x15,\x			# load x15 with x0 start
-  sb x15,0(x10)			# vertical line starts here fron x,y
-  addi x10,x10,1		# increase XYC pointer to byte3 y1(destination height)  
-  li x15,\height		# load the height , final value of the vertical line
-  addi x15,x15,\y
-  sb x15,0(x10)			# store in byte3 of XYC
-  call setTFTwindow
-  call PIXEL_REPEAT1		# call PIXEL_REPEAT1 subroutine to print the pixels as per coordinates supplied in line2
-  la x10,XYC			# point x10 to variable XYC
-  li x15,\width			# load x15 with width, we start drawing line from diagonal opposite x,y to complete rectangle
-  addi x15,x15,\x
-  sb x15,0(x10)			# store in XYC byte0
-  addi x10,x10,1		# increase the XYC pointer to byte1
-  li x15,\width			# load x15 with width, x0-x1=0 since start and end is width ,  vertical line will be drawn
-  addi x15,x15,\x
-  sb x15,0(x10)			# store in XYC byte0
-  addi x10,x10,1		# increase the XYC pointer to byte2
-  li x15,\y			# load x15 with y start		
-  sb x15,0(x10)			# store in XYC byte2
-  addi x10,x10,1		# point x10 to byte3 of XYC
-  li x15,\height		# load x15 with height , final destination pixel of vertical line
-  addi x15,x15,\y		
-  sb x15,0(x10)			# store in XYC byte3
-  call setTFTwindow		#
-  call PIXEL_REPEAT1		# call PIXEL_REPEAT1 subroutine to print the pixels as per coordinates supplied by macro  
-  la x10,XYC			# point x10 to variable XYC
-  li x15,\x			# load x15 with x start, 
-  sb x15,0(x10)			# store in XYC byte0
-  addi x10,x10,1		# increase the XYC pointer to byte1
-  li x15,\width			# load x15 with width, x0-x1= >0 horizontal line will be drawn
-  addi x15,x15,\x
-  sb x15,0(x10)			# store in XYC byte1
-  addi x10,x10,1		# increase the XYC pointer to byte2
-  li x15,\height		# load x15 with height , y starts with height diagnoal opposite of x,y
-  addi x15,x15,\y		
-  sb x15,0(x10)			# store in XYC byte2
-  addi x10,x10,1		# point x10 to byte3 of XYC
-  li x15,\height		# load x15 with height , height - height = 0 , vertical component 0 , only horizontal line
-  addi x15,x15,\y		
-  sb x15,0(x10)			# store in XYC byte3
-  call setTFTwindow		#
-  call PIXEL_REPEAT1		# call PIXEL_REPEAT1 subroutine to print the pixels as per coordinates supplied by macro  
-.endm
-
-.macro fillRECTANGLE x y width height colour
-  la x10,XYC			# point x10 to XYC
-  li x15,\x			# load x15 with start value x
-  sb x15,0(x10)			# store x in byte0 of XYC
-  addi x10,x10,1		# point X10 to byte1 of XYC
-  li x15,\width 		# load width of the rectanglex in x15
-  addi x15,x15,\x
-  sb x15,0(x10)			# store in byte1 of XYC
-  addi x10,x10,1		# point x10 to byte2 of XYC
-  li x15,\y			# load start of rectangley in x15
-  sb x15,0(x10)			# store in byte2 of XYC
-  addi x10,x10,1		# point x10 to byte3 of XYC
-  li x15,\height 		# load height of rectangle in x15
-  addi x15,x15,\y
-  sb x15,0(x10)			# store in byte3 of XYC
-  call setTFTwindow		# set rectangle window in LCD with above coordinates
-  la x10,XYCOLOUR		# point x11 to XYCOLOUR variable
-  addi x10,x10,2		# increase  address to byte2 , lo byte of colour
-  li x15,\colour		# load colour data supplied ,half word
-  sb x15,0(x10)			# store the low byte in XYCOLOUR byte2
-  srli x15,x15,8		# shift out low byte from x15 with only high byte remaining
-  addi x10,x10,1		# point to byte3 , hi byte of colour in XYCOLOUR
-  sb x15,0(x10)			# store hi byte of colour
-  call PIXEL_REPEAT1		# call PIXEL_REPEAT1 subroutine to print the pixels as per coordinates supplied in line2
-.endm
-
-
-.macro loadPARAM command, ack, hdata,ldata
-	addi sp,sp,-8
-	sw x3,0(sp)
-	sw a1,4(sp)
-    	la a1,result1		# result1 in SRAM holds 8 byte command format
-	addi a1,a1,3
-	li x3,\command	
-	sb x3,0(a1)		# write byte 3 ,command
-	addi a1,a1,1
-	li x3,\ack		
-	sb x3,0(a1)		# write byte 4,whether ack need or not 0 or 1
-	addi a1,a1,1
-	li x3,\hdata
-	sb x3,0(a1)		# write byte 5, hi byte of data
-	addi a1,a1,1
-	li x3,\ldata
-	sb x3,0(a1)		# write byte 6, low byte of data
-	lw a1,4(sp)
-	lw x3,0(sp)
-	addi sp,sp,8
-	
-.endm
-
-.macro loadPARAM1 command, ack, hdata, x6
+.macro loadPARAM1 command, ack, x7, x6
 	addi sp,sp,-8
 	#sw ra,0(sp)
 	sw x3,0(sp)
@@ -383,7 +274,7 @@ buffer2		= 0x20000068
 	li x3,\ack		
 	sb x3,0(a1)		# write byte 4,whether ack need or not 0 or 1
 	addi a1,a1,1
-	li x3,\hdata
+	mv x3,\x7
 	sb x3,0(a1)		# write byte 5, hi byte of data
 	addi a1,a1,1
 	mv x3,\x6
@@ -397,14 +288,6 @@ buffer2		= 0x20000068
 
 
 
-
-
-
-
-
-
-
-#include CH32V003_reg.S
 .align 4
 .text
 .global start
@@ -419,46 +302,42 @@ sp_init:
 	li x7,((1<<2)|(1<<4)|(1<<5)|(1<<0)|(1<<11)|(1<<12)|(1<<14))	# 1<<IOPA_EN,1<<IOPC_EN,1<<IOPD_EN,1<<AFIOEN,1<<SPI enable port A,C,D and AFIO functions
 	or x11,x11,x7			# or values 
 	sw x11,0(x10)			# store modified enable values in R32_RCC_APB2PCENR
-#Enable I2C clock in  APB1 register
-    
-    	la x10,R32_RCC_APB1PCENR 	# load address of APB1PCENR register to x10 ,for enabling I2C peripheral
-	lw x11,0(x10) 			# load contents from peripheral register R32_RCC_APB1PCENR pointed by x10
-	li x7,(1<<21) 			# 1<<I2C1_EN, = 1<<21 for I2C functions
-	or x11,x11,x7 			# or values 
-	sw x11,0(x10) 
 
-#I2C remap from pc1,pc2 to pd0,pd1
-	
-	la x10,R32_AFIO_PCFR1
-	lw x11,0(x10)
-	li x7,((0<<22)|(1<<1))		# 01 in 22 and 1 bits will remap i2c to pd0 and pd1
-	or x11,x11,x7
-	sw x11,0(x10)
 ###########
 #configure GPIO PortC as multiplex push-pull output for SPI
 	la x10,R32_GPIOC_CFGLR		# load pointer x10 with address of R32_GPIOC_CFGLR , I2C SDA & SCL is on portC PC1,PC2
 	lw x11,0(x10)			# load contents from register pointed by x10
-	li x7,~((0xf<<4)|(0xf<<8)|(0xf<<20)|(0xf<<24)|(0xf<<28))	# clear pc1,pc2,pc5,pc6,pc7. we need to setup PC1 ,PC5,PC6,PC7 for SPI
+	li x7,~((0xf<<4)|(0xf<<8)|(0xf<<12)|(0xf<<20)|(0xf<<24)|(0xf<<28))	# clear pc1,pc5,pc6,pc7. we need to setup PC1 ,PC5,PC6,PC7 for SPI. PC2 will be D/C pushpull
 	and x11,x11,x7			# clear  mode and cnf bits for selected pin C1,C2
-	li x7,((0xB<<4)|(0x3<<8)|(0xB<<20)|(0xB<<24)|(0xB<<28))		# PC1,PC5,PC6,PC7 = multiplex pushpull output 50mhz , 0b1011
+	li x7,((0xB<<4)|(0x3<<8)|(0x3<<12)|(0xB<<20)|(0xB<<24)|(0xB<<28))		# SPI PC1,PC5,PC6,PC7 = multiplex pushpull output 50mhz , 0b1011. PC2 = D/C pushpull for TFT,PC3=LED pushpull,PC4 input w/pullup voice switch
 	or x11,x11,x7			# OR value to register
 	sw x11,0(x10)			# store in R32_GPIOC_CFGLR
+
 
 #configure GPIO D for uart and I2c
 	la x10,R32_GPIOD_CFGLR		# load pointer x10 with address of R32_GPIOD_CFGLR , GPIO configuration register
 	lw x11,0(x10)			# load contents from register pointed by x10
-	li x7,~((0xf<<20)|(0xf<<24)|(0xf<<4)|(0xf<<0))	#clear pd6,pd5,pd1,pd0. we need to setup PD5 & PD6 for usart tx and rx and pd1,pd0 for I2C remap
+	li x7,~((0xf<<0)|(0xf<<4)|(0xf<<8)|(0xf<<12)|(0xf<<16)|(0xf<<20)|(0xf<<24))	#clear pd6,pd5,pd1,pd0. we need to setup PD5 & PD6 for usart tx and rx and pd1,pd0 for I2C remap
 	and x11,x11,x7			# clear pd5,pd6,pd1,pd0 mode and cnf bits for selected pin D4,D5,D6
-	li x7,((0x8<<24)|(0xB<<20)|(13<<4)|(13<<0))	# pd6 = input with PU/PD,pd5= multiplex pushpull output 50mhz,pd4= normal pushpull output 50hz
+	li x7,((0x3<<0)|(0x8<<4)|(0x8<<8)|(0x8<<12)|(0x8<<16)|(0xB<<20)|(0x8<<24))	# pd1,pd2,pd3,pd4,pd6 = input with PU/PD,pd5= multiplex pushpull output 50mhz,PD0 universal pushpull DF PLAYER
 	or x11,x11,x7			# OR value to register
 	sw x11,0(x10)			# store in R32_GPIOD_CFGLR
 
 #enable pull up for input	
 	la x10,R32_GPIOD_OUTDR		# enable pullup resistor by setting OUTDR register
 	lw x11,0(x10)			# this setting of GPIO_OUTDR for pullup resistor effects if corresonding pin is selected as input
-	li x7,(1<<6)			#when PD6 is input with resistor selected 1= pullup and 0 = pulldown
+	li x7,((1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<6)) #when PD1,PD2,PD3,PD4,PD6 is input with resistor selected 1= pullup and 0 = pulldown
 	or x11,x11,x7
-	sw x11,0(x0)
+	sw x11,0(x10)
+
+#configure GPIO A for I2c
+	la x10,R32_GPIOA_CFGLR		# load pointer x10 with address of R32_GPIOD_CFGLR , GPIO configuration register
+	lw x11,0(x10)			# load contents from register pointed by x10
+	li x7,~((0xf<<4)|(0xf<<8))	# clear pa1,pa2,
+	and x11,x11,x7			# clear pa1,pa2
+	li x7,((5<<4)|(5<<8))		# set output opendrain for PA1 and PA2
+	or x11,x11,x7			# OR value to register
+	sw x11,0(x10)			# store in R32_GPIOA_CFGLR
 
 #configure USART baud
 	la x10,R32_USART_BRR		# USART BAUD setting
@@ -506,440 +385,238 @@ SPI_CONFIG:
 
 
 ############
-#I2C0 configuration 
-	la x10,R32_RCC_APB1PRSTR 	# set pointer to clock control  peripheral reset register 
-	lw x11,0(x10) 			# load contents to x11
-	li x7,(1<<21) 			# shift 1 to 21st bit position
-	or x11,x11,x7 			# OR with x11
-	sw x11,0(x10) 			# set bit 21 of R32_RCC_APB1PRSTR to reset I2C peripheral
-	not x7,x7 			# invert values in x7
-	and x11,x11,x7 			# and x11 to write a 0 in 21st bit
-	sw x11,0(x10) 			# store 0 in 21st bit to restart i2c engine
-
-	la x10,R16_I2C_CTLR2 		# set clock in control 2 register
-    	lh x11,0(x10) 			# copy contents of R16_I2C_CTLR2 to x11
-	li x7,0xffffffc0 		# clear frequency bits 0-5 with bit mask 0xffffffc0
-	and x11,x11,x7 			# AND will clear bit 0-5
-    	li x7,(8<<0) 			# 8Mhz I2C clock .default 24Mhz HSI/3 =8Mhz APB clock
-    	or x11,x11,x7 			# store APB clock frequency in bit 0-5
-	sh x11,0(x10) 			# store back in R16_I2C_CTLR2
-    	la x10,R16_I2C_CKCFGR 		# set pointer to I2C clockregister
-    	lh x11,0(x10) 			# copy values to x11 from above register
-	li x7,0xfffff000 		# clear CCR bits 0-11 with bitmask 0xfffff000
-	and x11,x11,x7 			# ANDing clears bit 0-11 in x11 register
-	li x7,(40<<0) 			# CCR = t(rscl)+t(wsclh)/tpclk1 = 1000+4000/125 =40 , or (8000000/2*100000)=40 , PCLK/2*100Khz =CCR
-    	or x11,x11,x7 			# store calculated CCR (data sheet)in x11 by OR
-	sh x11,0(x10) 			# store back in peripheral register
-	la x10,R16_I2C_CTLR1 		# set pointer to I2C control register 1
-	lh x11,0(x10) 			# copy contents
-	li x7,(1<<0) 			# 1<<PE = 1<<0 enable bit is bit0,1<<10 is ack enable bit
-	or x11,x11,x7 			# OR enable bit to x11
-	sh x11,0(x10) 			# store half word in control register 1
-	la x10,R16_I2C_CTLR1 		# set pointer to I2C control register 1
-	lh x11,0(x10) 			# copy contents
-	li x7,(1<<10) 			# 1<<10 is ack enable bit
-	or x11,x11,x7 			# OR ACK enable bit to x11
-	sh x11,0(x10) 			# store half word in control register 1
-
-
-
-	call ST7735_init		# ST3375 LCD initialization routine
-
-
-.align 4
-
-#test UART transmission,transmits string SAJEEV SANKARAN CH32V003 UART
-
-	la x10,name			# load address of label "name" to x10, string to be transmitted
-string_loop:
-	lb x8,0(x10)			# load 1 byte from 0 offset of "name"
-	beqz x8,finish			# if byte in x8 null branch to label "finish"
-	call USART_TX			# call subroutine USART_TX to transmit byte
-	addi x10,x10,1			# increase pointer by 1 byte
-	j string_loop			# jump back to label string_loop until null is encountered
-finish:
-	nop
-
-	li x8,0x0d			# line feed
-	call USART_TX			# call uart
-	li x8,0x0a			# carriage feed
-	call USART_TX			# call uart
-####################################################
-.align 4
-	call CLEAR_SCREEN		# macro clear screen to blackout screen
-
-	
-
-
+	call ST7735_init	# ST3375 LCD initialization routine
+	call CLEAR_SCREEN	# macro clear screen to blackout screen
+	bgcolor COLOR_BLACK	# set font background colour
+	fontcolor COLOR_WHITE	# set font colour white
+############
 check_sw:
 	la a4,R32_GPIOD_INDR	# load a4 with PortD base address
 	lw a3,0(a4)		# load a3 with contents of portD Istatus
 	andi a3,a3,0x00000004	# and with 0x04 to isolate PD2 status
-	bnez a3,voice_sw		# if 1 branch to label no menu. If PD0 pressed time set menu is called else go to time display/update
-	call menu		# calls routine to adjust and set time
+	bnez a3,voice_sw	# if 1 branch to label no menu. If PD0 pressed time set menu is called else go to time display/update
+	call menu		# calls routine to save and set time
 
 voice_sw:
-	la a4,R32_GPIOC_INDR	# load a4 with PortC base address
+	la a4,R32_GPIOD_INDR	# load a4 with PortC base address
 	lw a3,0(a4)		# load a3 with contents of portD Istatus
-	andi a3,a3,0x00000010	# and with 0x04 to isolate PC2 status
-	bnez a3,show_time	# if 1 branch to label no menu. If PC2 pressed time set menu is called else go to time display/update
-	call start_audio	# calls routine to play audio track
+	andi a3,a3,0x00000002	# and with 0x02 to isolate PD1 status
+	bnez a3,show_time	# if 1 branch to label no menu. If PD1 pressed time set menu is called else go to time display/update
+	call start_audio	# calls routine to announce time
 
-
+	
 show_time:
+	SETCURSOR 0 0 15 31	# top left 00 coordinates
+	bgcolor COLOR_BLACK	# background colour of font
+	fontcolor COLOR_WHITE	# font colour	
 	call I2C_START 		# send start condition on I2C bus
-	li a5,DS1307WAD 	# radio random read address
-	call SEND_ADDRESS 	# call subroutine to send address
-	li a5,0x00 		# clock register 0x00 is set as pointer
+	li x7,DS1307WAD 	# radio random read address
+	call I2C_WRITE 		# call subroutine to transmit value loaded in a0
+	li x7,0x00 		# clock register 0x00 is set as pointer
 	call I2C_WRITE 		# call subroutine to transmit value loaded in a0
 	call clock_read 	# reads 7 bytes from clock register 
 	call BCD_ASCII		# converts BCD to ASCII values
 	call time_buffer_for_OLED# rearranges converted ASCII characters in HR:MIN:SEC format, address clock display , 8 bytes for time 
-	SETCURSOR 0 0 15 31
-	bgcolor COLOR_BLACK
-	fontcolor COLOR_WHITE		
-	call print_time
-	call display_date_buffer
-	SETCURSOR 0 40 15 71
-	call print_date
-	SETCURSOR 0 80 15 111
-	call print_week	
-
-	j check_sw
-
-
-
-
-
-
-
+	call print_time		# routine to print time
+	call display_date_buffer# routine that arranges date in buffer
+	SETCURSOR 0 40 15 71	# set cursor at x0y40
+	call print_date		# print date as 2nd line
+	SETCURSOR 0 80 15 111	# set cursor at x0y80
+	call print_week		# routine prints week string as 3rd line
+	call delay1S		# 1 second delay
+	j check_sw		# loop to check switch
 
 
 
 ####----I2C--FUNCTIONS-----------------------------------------------------------------------------
-I2C_BUSY:
+#I2C SUBROUTINES____________________________________#
+
+##########################
+SDA_HI:
 	addi sp,sp,-12
 	sw ra,0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-IB:
-	la x10, R16_I2C_STAR2 		# set pointer x10 to I2C status register 2, busy bit resides there
-	lh x11,0(x10) 			# copy to x11 I2C_STAR2 register contents
-	andi x11,x11,(1<<1) 		# and x11 with 1<<I2CBUSY
-	bnez x11,IB 			# if not 0 loop till I2CBUSY bit becomes 0
-
-	lw x11,8(sp)
-	lw x10,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,12
-	ret 
-#####################
-
-I2C_START: 				# send start condition on I2C bus
-	addi sp,sp,-20
-	sw ra,0(sp)
-	sw x12,4(sp)
-	sw x11,8(sp)
-	sw x10,12(sp)
-	sw x7,16(sp)
-
-	la x10,R16_I2C_CTLR1 		# start bit is in i2c cotrol register bit 8
-	lh x11,0(x10) 			# copy contents of control register
-	ori x11,x11,((1<<10) | (1<<8)) 	# set start bit8 and ack enable bit10
-	sh x11,0(x10) 			# store in I2C_CTL0 register
-check_master_mode_bit: 			# below code checks start bit is set , master mode bit is set and bus busy bit is set, reading STAR1 & STAR2 clears start bit
-	la x10, R16_I2C_STAR1 		# set pointer to status register1
-	lh x11,0(x10) 			# read contents to x11
-	la x10, R16_I2C_STAR2 		# set pointer to status register2
-	lh x12,0(x10) 			# read contents to x12
-	slli x12,x12,16 		# shift x12 16 position to add x11 and x12 to accomodate all status bits in 1 register (x11)
-	or x11,x11,x12 			# OR both registers , both STAR1 & STAR2 in X11
-	li x7,0x00030001 		# BUSY, MSL and SB status bits
-	and x11,x11,x7 			# ANDing yeilds the above 3 status bits
-	bne x11,x7,check_master_mode_bit # if all 3 bits not sets wait in a loop
-
-	lw x7,16(sp)
-	lw x10,12(sp)
-	lw x11,8(sp)
-	lw x12,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,20
-	ret
-#####################################
-
-I2C_WRITE:
-	addi sp,sp,-12
-	sw ra,0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-IW:
-	la x10,R16_I2C_STAR1 		# i2c_status1 register
-	lh x11,0(x10) 			# read and copy contents
-	andi x11,x11,(1<<7) 		# and contents of x11 with TxE bit7 , if set transmission buffer empty
-	beqz x11,IW 			# wait till TBE is set (loop if a3 is 0)
-	la x10,R16_I2C_DATAR 		# set pointer to I2C data register
-	sb x15,0(x10) 			# store data loaded in x15 to I2C data register
-
-	lw x11,8(sp)
-	lw x10,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,12
-	ret # return to caller
-####################################
-
-CLEAR_ACK: 				# subroutine to clear ACKEN bit in I2C_CTLR1 register
-	addi sp,sp,-12
-	sw ra,0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-
-	la x10,R16_I2C_CTLR1
-	lh x11,0(x10) 			# copy to x11 contents of I2C_CTL0 rgister
-	andi x11,x11,~(1<<10) 		# and with 0 shifted to ACK bit10
-	sh x11,0(x10) 			# write back to register
-
-	lw x11,8(sp)
-	lw x10,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,12
-	ret 				# return to caller
-####################################
-
-I2C_TX_COMPLETE: 			# subroutine checks weather I2C transmission is complete
-	addi sp,sp,-12
-	sw ra,0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-TX:
-	la x10,R16_I2C_STAR1
-	lh x11,0(x10)
-	andi x11,x11,(1<<7) 		# check TBE(7) is set 
-	beqz x11,TX 			# if not wait by looping to label I2C_TX_COMPLETE 
-
-	lw x11,8(sp)
-	lw x10,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,12
-	ret 				# return to caller
-#####################################
-
-I2C_STOP: 				# subroutine to stop I2C transmission
-	addi sp,sp,-12
-	sw ra,0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-
-	la x10,R16_I2C_CTLR1
-	lh x11,0(x10)
-	ori x11,x11,(1<<9) 		# set STOP bit9 in I2C_CTRL1 register
-	sh x11,0(x10)
-
-	lw x11,8(sp)
-	lw x10,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,12
-	ret # return to caller
-#####################################
-
-SEND_ADDRESS: # sends address , address to be loaded in x15
-	addi sp,sp,-20
-	sw ra,0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-	sw x12,12(sp)
-	sw x7,16(sp)
-
-	la x10,R16_I2C_DATAR 		# set pointer to data register
-	sb x15,0(x10) 			# store byte in x15 to I2C data register
-address_transmit:
-	la x10, R16_I2C_STAR1 		# reading STAR1 followed by STAR2 clears the address bit
-	lh x11,0(x10)
-	la x10, R16_I2C_STAR2 		# reading STAR1 followed by STAR2 clears the address bit
-	lh x12,0(x10)
-	slli x12,x12,16 		# shift STAR2 by 16 bits LHS
-	or x11,x11,x12 			# STAR1 & STAR2 now in x11, top16 bits STAR2 , lower 15 bits STAR1 
-	li x7,0x00070082 		# BUSY, MSL, ADDR, TXE and TRA status
-	and x11,x11,x7 			# and with above bit mask to see whether these bits are set in status register
-	bne x11,x7,address_transmit 	# sit in tight loop until above bits are set in both status register
-
-	lw x7,16(sp)
-	lw x12,12(sp)
-	lw x11,8(sp)
-	lw x10,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,20
-	ret
-########################################
-
-check_i2c_status:
-	addi sp,sp,-16
-	sw ra,0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-	sw x12,12(sp)
-
-	la x10, R16_I2C_STAR1 		# set pointer x10 to R16_I2C_STAR1 , status register 1
-	lh x11,0(x10) 			# copy contents to x11
-	la x10, R16_I2C_STAR2 		# set pointer to R16_I2C_STAR2
-	lh x12,0(x10) 			# copy contents to x12
-	slli x12,x12,16 		# shift x12 16 position to left and OR it with x11 to hold both register values in 1 32 bit register
-	or x11,x11,x12 			# status register 1 = 0-15 bits and status register2 = 16-32 bit
-	la x10,buffer 			# point x10 to SRAM buffer , address 0x20000004
-	sw x11,0(x10) 			# store status data in sram for future use
-
-	lw x12,12(sp)
-	lw x11,8(sp)
-	lw x10,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,16
-	ret
-#################################################################
-#############################################
-check_btf:
-	addi sp,sp,-12
-	sw ra,0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-BTF:
-	la x10,R16_I2C_STAR1
-	lw x11,0(x10)
-	andi x11,x11,(1<<2)
-	beqz x11,BTF
-
-	lw x11,8(sp)
-	lw x10,4(sp)
+	sw a0,4(sp)
+	sw x7,8(sp)
+	la a0,R32_GPIOA_BSHR		# load address of GPIOA port bit set register
+	li x7,sda			# set PA1, bit1 ,0x00000002
+	sw x7,0(a0)			# store in port register, resistor pulls sda high , opendrain
+	lw x7,8(sp)
+	lw a0,4(sp)
 	lw ra,0(sp)
 	addi sp,sp,12
 	ret
-#############################################################
-# I2C read routines , call with address in x15
-#############################################################
-I2C_READ_ONE:   			# (subroutine for single byte reception)
-	addi sp,sp,-20
+#########################
+SDA_LO:
+	addi sp,sp,-12
 	sw ra,0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-	sw t1,12(sp)
-	sw x12,16(sp)
-
-	la t1,buffer 			# load address of memory location with label buffer
-radd_transmit1: 			# this code block below checks whether address bit is set when address is transmitted successfully
-	la x10,R16_I2C_STAR1 		# set x10 pointer to I2C status register 1
-	lh x11,0(x10) 			# copy contents to x11
-	la x10,R16_I2C_STAR2 		# set x10 pointer to I2C status register 2 
-	lh x12,0(x10) 			# copy contents to x12
-	slli x12,x12,16 		# shift half woord in x12 16 bits left (top half)
-	or x11,x11,x12 			# OR left aligned X12 with right aligned x11, both status register bits now in x11
-	li x7,0x00030002 		# load bit mask to test BUSY, MSL, ADDR, status for Mster receiver mode
-	and x11,x11,x7 			# AND bit mask with x11 (status register contents)
-	bne x11,x7,radd_transmit1 	# if 0x00030002 is set address transmission success. else sit in tight loop till address tx is complete
-	la x10,R16_I2C_STAR1 		# dummy read R16_I2C_STAR1 followed by R16_I2C_STAR2 to clear ADDR bit in I2C_STAR1 register
-	lh x11,0(x10) 			# dummy read
-	la x10,R16_I2C_STAR2 		# dummy read R16_I2C_STAR1 followed by R16_I2C_STAR2 to clear ADDR bit in I2C_STAR1 register
-	lh x11,0(x10) 			# dummy read
-	call CLEAR_ACK 			# call subroutine to clear ACK bit (EVT6_1)
-	call I2C_STOP 			# call subroutine to set STOP bit (EVT6_1)
-R1:
-	la x10,R16_I2C_STAR1 		# copy contents of I2C_STAT0 register to x11
-	lw x11,0(x10)
-	andi x11,x11,(1<<6) 		# and x11 with RxNE bit6 mask (receive buffer not empty)
-	beqz x11,R1 			# if a3 is 0 wait by looping to R1 label until RBNE is set
-	la x10,R16_I2C_DATAR 		# set pointer to I2C data register
-	lb x15,0(x10) 			# copy contents of I2C data register to x15
-	sb x15, 0(t1) 			# store byte in x15 to memory location buffer pointed by t0 register offset 0
-
-	lw x12,16(sp)
-	lw t1,12(sp)
-	lw x11,8(sp)
-	lw x10,4(sp)
+	sw a0,4(sp)
+	sw x7,8(sp)
+	la a0,R32_GPIOA_BCR		# address of port bit clear register
+	li x7,sda			# 0x00000002 will clear and port pulls sda to low to ground
+	sw x7,0(a0)
+	lw x7,8(sp)
+	lw a0,4(sp)
 	lw ra,0(sp)
-	addi sp,sp,20
-	ret # return to caller
-
+	addi sp,sp,12
+	ret
+#######################
+SCL_HI:
+	addi sp,sp,-12
+	sw ra,0(sp)
+	sw a0,4(sp)
+	sw x7,8(sp)
+	la a0,R32_GPIOA_BSHR		# bit set register for porta
+	li x7,scl			# 0x00000004 , sets PA2, bit2
+	sw x7,0(a0)			# resistor pulls up SCL opendrain line
+	lw x7,8(sp)
+	lw a0,4(sp)
+	lw ra,0(sp)
+	addi sp,sp,12
+	ret
+########################
+SCL_LO:
+	addi sp,sp,-12
+	sw ra,0(sp)
+	sw a0,4(sp)
+	sw x7,8(sp)
+	la a0,R32_GPIOA_BCR		# bit clear register for porta
+	li x7,scl			# clear bit when 1 is written, 0x00000004
+	sw x7,0(a0)			# pulls SCL low to ground
+	lw x7,8(sp)
+	lw a0,4(sp)
+	lw ra,0(sp)
+	addi sp,sp,12
+	ret
+##########################
+I2C_START:
+	addi sp,sp,-4
+	sw ra,0(sp)
+	call SDA_HI			# SDA high , bus in released condition
+	call SCL_HI			# SCL high , bus in released condition
+	call SDA_LO			# SDA low while SCL high
+	call SCL_LO			# follow SDA then SCL low
+	lw ra,0(sp)
+	addi sp,sp,4
+	ret
+#########################
+I2C_STOP:
+	addi sp,sp,-4
+	sw ra,0(sp)
+	call SDA_LO			# make SDA low before SCL is high
+	call SCL_HI			# SCL high while SDA is low for stop
+	call SDA_HI			# release SDA for nuetral condition on bus
+	lw ra,0(sp)
+	addi sp,sp,4
+	ret
+###################
+SEND_ACK:
+	addi sp,sp,-4
+	sw ra,0(sp)
+	call SDA_LO			# while SDA low cycle clock
+	call SCL_HI			# cycle clock
+	call SCL_LO			# cycle clock
+	call SDA_HI			# SDA high after cycling clock
+	lw ra,0(sp)
+	addi sp,sp,4
+	ret
+########################
+SEND_NACK:
+	addi sp,sp,-4
+	sw ra,0(sp)
+	call SDA_HI			# while SDA high cycle clock
+	call SCL_HI			# cycle clock
+	call SCL_LO			# cycle clock
+	lw ra,0(sp)
+	addi sp,sp,4
+	ret
 ###############
 
-###############################################################################
-# subroutine to read 2 or more bytes , load read address in x15 and call
-# load t1 with location address to store received data
-# load t0 with number of bytes to be received
-# load t2 (7) with 2 indicates last 2 bytes to be received
-################################################################################
-MULTI_READ: 
-	addi sp,sp,-28
+I2C_WRITE:				# load data byte in x7 and call I2C_WRITE
+	addi sp,sp,-12
 	sw ra,0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-	sw t1,12(sp)
-	sw t2,16(sp)
-	sw t0,20(sp)
-	sw x12,24(sp)
-
-	la x10,R16_I2C_DATAR 		# set pointer to I2C data register
-	sb x15,0(x10) 			# store byte in x15 to I2C data register to be transmitted to slave
-radd_transmit: 				# this code block below checks whether address bit is set when address is transmitted successfully
-	la x10,R16_I2C_STAR1 		# set x10 pointer to I2C status register 1
-	lh x11,0(x10) 			# copy contents to x11
-	la x10,R16_I2C_STAR2 		# set x10 pointer to I2C status register 2 
-	lh x12,0(x10) 			# copy contents to x12
-	slli x12,x12,16 		# shift half woord in x12 16 bits left (top half)
-	or x11,x11,x12 			# OR left aligned X12 with right aligned x11, both status register bits now in x11
-	li x7,0x00030002 		# load bit mask to test BUSY, MSL, ADDR, status for Mster receiver mode
-	and x11,x11,x7 			# AND bit mask with x11 (status register contents)
-	bne x11,x7,radd_transmit 	# if 0x00030002 is set address transmission success. else sit in tight loop till address tx is complete
-	la x10,R16_I2C_STAR1 		# dummy read R16_I2C_STAR1 followed by R16_I2C_STAR2 to clear ADDR bit in I2C_STAR1 register
-	lh x11,0(x10) 			# read
-	la x10,R16_I2C_STAR2 		# dummy read R16_I2C_STAR1 followed by R16_I2C_STAR2 to clear ADDR bit in I2C_STAR1 register
-	lh x11,0(x10) 			# read
-
-	# la t1,buffer 			# load address of memory location with label buffer
-	# li t0,6 			# t0 is loaded with number of bytes received
-	li x7,2 			# load t2 with compare value 2 (last 2 bytes count of message to be received)
-	bleu t0,x7,BBYTES2 		# branch to label BYTES2 if t0 is equal or lower than t2 (t2 = 2) , if condition meets we have reached last 2 bytes 
-R11:
-	la x10,R16_I2C_STAR1 		# copy contents of I2C_STAT1 register to x11
-	lw x11,0(x10) 			# copy to x11 contents I2C_STAT1
-	andi x11,x11,(1<<6) 		# and x11 with RxNE bit6 mask (receive buffer not empty)
-	beqz x11,R11 			# wait till RxNE is set ( data arrived in data register)
-
-	la x10,R16_I2C_DATAR 		# set pointer to I2C data register
-	lb x15,0(x10) 			# copy contents of I2C data register to x15
-	sb x15,0(t1) 			# store received byte in x15 to address pointed by t1 register (buffer here)
-	addi t1,t1,1 			# increase buffer address + 1
-	addi t0,t0,-1 			# decrease counter of received bytes
-	bleu t0,x7,BBYTES2 		# branch to label BYTES2 if t0 is equal or lower than t2 (t2 = 2) , if condition meets we have reached last 2 bytes 
-	j R11 				# if not reached last 2 bytes jump back to R2 to receive bytes
-BBYTES2: 				# reach here if the read has reached last 2 bytes of the message
-	la x10,R16_I2C_STAR1 		# status register1
-	lh x11,0(x10) 			# copy to x11 I2C_STAT0 register
-	andi x11,x11,(1<<6) 		# check RxNE bit6 is set by anding x11
-	beqz x11,BBYTES2 		# wait till RxNE is set by looping
-	la x10,R16_I2C_DATAR 		# set pointer to I2C data register
-	lb x15,0(x10) 			# copy contents of I2C data register to x15
-	sb x15,0(t1) 			# store 2nd last byte in x15 to memory location buffer
-	addi t1,t1,1 			# increase buffer address + 1
-	call CLEAR_ACK 			# clear ACK bit so that master will send NAK to stop slave from sending data after next byte
-	call I2C_STOP 			# set STOP bit to terminate I2C operation after next byte (last one)
-BBYTES1: # last byte
-	la x10,R16_I2C_STAR1 		# set pointer x10 to I2C status register1
-	lh x11,0(x10) 			# copy contents to x11
-	andi x11,x11,(1<<6) 		# check RxNE bit6 is set by anding x11
-	beqz x11,BBYTES1 		# sit in tight loop till RxNE sets
-	la x10,R16_I2C_DATAR 		# set pointer to I2C data register
-	lb x15,0(x10) 			# copy last byte transmitted from slave to I2C data register to x15
-	sb x15,0(t1) 			# store byte in x15 to memory location buffer pointed by t0
-
-	lw x12,24(sp)
-	lw t0,20(sp)
-	lw t2,16(sp)
-	lw t1,12(sp)
-	lw x11,8(sp)
-	lw x10,4(sp)
+	sw x3,4(sp)
+	sw x5,8(sp)
+	li x3,8				# bit counter
+trx_loop:
+	call SDA_LO			# start with sda low
+	mv x5,x7			# data in x7 is moved to x5 working register
+	andi x5,x5,0x80			# extract msb
+	beqz x5,bit0			# if 0 branch to bit0
+	call SDA_HI			# if 1 call SDA_HI
+bit0:
+	call SCL_HI			# call SCL_HI , cycle clock to transmit data
+	slli x7,x7,1			# shift x7 1 bit left
+	call SCL_LO			# call SCL_LO to finisg 1 clock
+	addi x3,x3,-1			# decrease bit counter
+	bnez x3,trx_loop		# loop till all bits are transmitted
+	call SDA_HI           		# for ACK
+	call SCL_HI			# ack start
+	call SCL_LO			# ack finished
+	call SDA_LO			# SDA-LO
+	lw x5,8(sp)
+	lw x3,4(sp)
 	lw ra,0(sp)
-	addi sp,sp,28
+	addi sp,sp,12
+	ret
+##################################
+I2C_READ_BYTE:
+    	addi sp,sp,-16		# adjust stack
+    	sw ra,0(sp)		# push RA
+	sw x7,4(sp)		# push x7
+	sw x3,8(sp)		# push x3
+	sw x5,12(sp)		# push x5
+    	li x7,0			# clear result register
+    	li x3,8  		# Initialize bit counter
+rx_loop:
+    	call SDA_HI		# release SDA for data receive
+    	call SCL_HI		# begine clocking cycle
+    	la a0,R32_GPIOA_INDR	# point a0 to port A input register
+    	lw x5,0(a0)		# load word for input register
+    	andi x5,x5,2		# extract bit 1 to know data line value
+    	slli x7,x7,1       	# Shift left to make room for the next bit
+    	or x7,x7,x5        	# Store the bit into the byte
+    	call SCL_LO		# finsh clock cycling for the bit
+    	addi x3,x3,-1		# decrease bit counter
+    	bnez x3,rx_loop    	# Repeat for next bit until all 8 bits are received
+	srli x7,x7,1		# SDA is on bit1, the data in x7 is offset by 1 bit to left. align to right by shifting 1 byte right
+	sb x7,0(a1) 		# Store received byte in buffer , routine called with a1 pointing buffer      
+    	lw x5,12(sp)		# pop x5
+	lw x3,8(sp)		# pop x3
+	lw x7,4(sp)		# pop x7
+	lw ra,0(sp)		# pop RA
+    	addi sp,sp,16		# adjust stack
+    	ret			# return to caller
+##################################
+
+I2C_MULTI_READ:                        # call with number of bytes to be read in x6
+	addi sp,sp,-12
+	sw ra,0(sp)
+	sw a1,4(sp)
+	sw x6,8(sp)
+	la a1,buffer			# a1 points to buffer
+	call I2C_START			# send start on bus
+	li x7,DS1307RAD 		# load read address of slave, to be defined
+	call I2C_WRITE			# write the address on bus with I2C_WRITE routine
+byte_read_loop:
+	call I2C_READ_BYTE		# reads 1 byte into buffer
+	addi a1,a1,1			# increase buffer address by 1 byte
+	addi x6,x6,-1			# decrease receive byte count
+	bnez x6,need_ack		# if byte counter is above 0, branch to need_ack label to send ACK
+	call SEND_NACK			# if byte counter is 0 send NACK to terminate read
+	j send_stop			# jump to label stop to send i2c stop
+need_ack:
+	call SEND_ACK			# call routine to send ACK if byte counter is not 0
+	j byte_read_loop		# jump to byte_read_loop to exhaust byte counter
+send_stop:
+	call I2C_STOP			# call routine to stop i2c transmission and release bus
+	lw x6,8(sp)
+	lw a1,4(sp)
+	lw ra,0(sp)
+	addi sp,sp,12
 	ret
 
 ################################################################################
-
+# delay routines
 #==========================================
 delay10S: 
 	addi sp,sp,-8 			# push RA
@@ -1039,80 +716,164 @@ TC_check:
 	ret				# return to caller
 
 ########################################
+##########################################################################################################
+# converts 1 byte into ASCII represented hexadecimal value , load byte in t2
+##########################################################################################################
+bin_to_ascii:
+	addi sp,sp,-4
+	sw ra,0(sp)
+	mv a3,t2
+	andi a3,a3,0xf0
+	srli a3,a3,4
+	slti a4,a3,10			# set a4 to 1 if a3 is less than 10 ,10and higher a4=0
+	beqz a4 ,letter1
+	ori a3,a3,0x30
+	#mv a0,a3
+	mv x8,a3
+	call USART_TX
+	j low_nibble
+letter1:
+	addi a3,a3,0x37
+	#mv a0,a3
+	mv x8,a3
+	call USART_TX
+low_nibble:
+	mv a3,t2
+	andi a3,a3,0x0f
+	slti a4,a3,10			# set a4 to 1 if a3 is less than 10 ,10and higher a4=0
+	beqz a4 ,letter2
+	ori a3,a3,0x30
+	#mv a0,a3
+	mv x8,a3
+	call USART_TX
+	j exit_bin_to_ascii
+letter2:
+	addi a3,a3,0x37
+	#mv a0,a3
+	mv x8,a3
+	call USART_TX
+exit_bin_to_ascii:
+	lw ra,0(sp)
+	addi sp,sp,4
+	ret
+####################################################
+#########################################################################################################################################
+######### below block is for DEBUGGING, prints  registers contents in hexadecimal & decimal via UART to terminal
+#########################################################################################################################################
+debug:
+	addi sp,sp,-20
+	sw ra,0(sp)
+	sw x10,4(sp)
+	sw t1,8(sp)
+	sw t2,12(sp)
+	sw x8,16(sp)
 
+	la x10,buffer			# SRAM address where systick count is stored in ISR
+	li t1,4				# print count 4 , 4 bytes to be transfered
+readloop22:
+	lb t2,3(x10)			# read from top most byte 
+	call bin_to_ascii		# call routine that converts binary to ASCII format of hexadecimal , convets 1 byte
+	addi x10,x10,-1			# decrease memorey address  counter
+	addi t1,t1,-1			# decrease byte counter ( total 4 bytes to be converted and transmitted via uart)
+	bnez t1,readloop22		# if counter greater than 0 loop
+	li x8,0x0d			# carriage return
+	call USART_TX			# transmit
+	li x8,0x0a			# line feed
+	call USART_TX			# transmit
 
+	la x10,buffer01			# SRAM address where systick count is stored in ISR
+	li t1,4				# print count 4 , 4 bytes to be transfered
+readloop23:
+	lb t2,3(x10)			# read from top most byte 
+	call bin_to_ascii
+	addi x10,x10,-1
+	addi t1,t1,-1
+	bnez t1,readloop23
+	li x8,0x0d
+	call USART_TX
+	li x8,0x0a
+	call USART_TX
+	lw x8,16(sp)
+	lw t2,12(sp)
+	lw t1,8(sp)
+	lw x10,4(sp)
+	lw ra,0(sp) 
+	addi sp,sp,20
+	ret
+	
+###########################################
 ####################################################################################
-# prints time i buffer (8 bytes --- HR:MN:Ss)
+# prints time in buffer (8 bytes --- HR:MN:Ss) , arguments in buffer
 ###################################################################################
 	
 print_time:
 	addi sp,sp,-12		# push RA
 	sw ra,0(sp)		# push RA
-	sw x3,4(sp)
-	sw a1,8(sp)
-	li x3,8			# number of bytes
-	la a1,buffer		# load address buffer , print date routine reads from buffer
-	addi a1,a1,7		# time stored in reverse order in clock display, read from buffer+7 backwards
+	sw x3,4(sp)		# push x3
+	sw a1,8(sp)		# push a1
+	li x3,8			# counter for 8 bytes(hr:n:ss)
+	la a1,buffer		# point a1 to buffer start
+	addi a1,a1,7		# increase by 7 bytes, time stored as ss:mn:hr in buffer. need to read backwards
 print_time_loop:
-	lbu a5,0(a1)		# load byte from buffer
-	call select_font	# select the correct font for the ascii char
-	call DRAW_CHAR32	# call routine to draw the char in screen
+	lbu a5,0(a1)		# load a byte
+	call select_font	# find correct font
+	call DRAW_CHAR32	# write to screen
 	call push_cursor1	# move cursor one box ahead for the next char
-	addi a1,a1,-1		# increase address by 16 , one char array
+	addi a1,a1,-1		# decrease address by 1 
 	addi x3,x3,-1		# increase t1 counter 1
 	bnez x3,print_time_loop	# if a3 is not equal to t1 loop
-	lw a1,8(sp)
-	lw x3,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,12
-	ret
+	lw a1,8(sp)		# pop a1
+	lw x3,4(sp)		# pop x3
+	lw ra,0(sp)		# POP RA
+	addi sp,sp,12		# adj stack
+	ret			# return to caller
 
 ####################################################################################
-# prints date in buffer (8 bytes --- DT:MT:YR)
+# prints date in buffer (8 bytes --- DT:MT:YR) , load arguments in buffer before calling
 ###################################################################################
 	
 print_date:
 	addi sp,sp,-12		# push RA
 	sw ra,0(sp)		# push RA
-	sw x3,4(sp)
-	sw a1,8(sp)
-	li x3,8
-	la a1,buffer
+	sw x3,4(sp)		# push x3
+	sw a1,8(sp)		# push a1
+	li x3,8			# counter for 8 bytes(dt-mo-yr)
+	la a1,buffer		# point a1 to buffer
 print_date_loop:
-	lbu a5,0(a1)
-	call select_font
-	call DRAW_CHAR32
+	lbu a5,0(a1)		# load byte from buffer
+	call select_font	# select eqvalent font
+	call DRAW_CHAR32	# write to screen
 	call push_cursor1	# move cursor one box ahead for the next char
 	addi a1,a1,1		# increase address by 16 , one char array
 	addi x3,x3,-1		# increase t1 counter 1
 	bnez x3,print_date_loop	# if a3 is not equal to t1 loop
-	lw a1,8(sp)
-	lw x3,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,12
-	ret
-##########################################################################################
-# Print_week  prints weekday string on LCD. call set cursor and then call print_week
-#########################################################################################
+	lw a1,8(sp)		# pop a1
+	lw x3,4(sp)		# pop x3
+	lw ra,0(sp)		# pop ra
+	addi sp,sp,12		# adj stack
+	ret			# return to caller
+###############################################################################################
+# Prints week day string based on what is stored in SRAM variable week,set cursor before caling
+###############################################################################################
 print_week:
-	addi sp,sp,-8
-	sw ra,0(sp)
-	sw a2,4(sp)
-	la a2,week			# variable in SRAM , holds address of string of current week day.
-	lw a5,0(a2)			# load the address of the week string to a5
-	mv a2,a5			# copy from a5 to a2 register. now a2 register has the address of the null terminated string (eg "monday ")
+	addi sp,sp,-8			# adj stack
+	sw ra,0(sp)			# push ra
+	sw a2,4(sp)			# push a2
+	la a2,week			# SRAM variable holds address of correct string to be displayed
+	lw x3,0(a2)			# copy address of week string to x3
+	mv a2,x3			# move address of week string to pointer a2
 week_loop:
-    	lb a5, 0(a2)             	# Load the current byte (character) into a1
-    	beq a5, zero, wend_loop   	# If character is null (0), exit the loop
-	call select_font		# subroutine to calculate the address of the font in table
-	call DRAW_CHAR32		# subroutine to write the fint on the ST LCD
+    	lb a5, 0(a2)             	# Load the current byte (character) into x15
+    	beq a5, zero, wend_loop   	# If character is null (0), exit the loop as we reach end of string
+	call select_font		# select eqvalent font for the char loaded
+	call DRAW_CHAR32		# write font in screen
 	call push_cursor1		# move cursor one box ahead for the next char
 	addi a2,a2,1           		# increase address by 1 for next byte
-	j week_loop             		# Repeat the loop
+	j week_loop             	# Repeat the loop
 wend_loop:
-	lw a2,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,8
+	lw a2,4(sp)			# pop a2
+	lw ra,0(sp)			# pop ra
+	addi sp,sp,8			# adj stack
     	ret				# Exit the program
 ###################################################################################
 #   clock_read ,,, before calling store address in t1, num of bytes in t0 
@@ -1122,42 +883,14 @@ wend_loop:
 clock_read:          		# store address in t1, num of bytes in t0 ,
 	addi sp,sp,-4 		# push RA
 	sw ra,0(sp) 		# push RA
-	la t1,buffer 		# address of location buffer in SRAM
-	#call I2C_BUSY 		# check weather I2C is busy ,wait till free
-	call I2C_START 		# send start condition on I2C bus
-	li a5, DS1307RAD 	# load register a0 with slave address (read), data to be sent is loaded in a0
-	li t0,7 		# number of bytes to be received 
-	call MULTI_READ 	# reads 7 bytes from RDA5807 and stores in buffer in litteendian format
+	li x6,7 		# number of bytes to be received (sec,min,hour,day,date,month,year)
+	call I2C_MULTI_READ 	# reads 7 bytes from RDA5807 and stores in buffer in litteendian format
 	lw ra,0(sp) 		# POP RA
 	addi sp,sp,4 		# pop RA
-	ret
+	ret			# return to caller
 
 
-###############################################################################
-# load clock address in a1 and data in buffer
-################################################################################
 
-clock_write: # data in buffer and address in a1
-	addi sp,sp,-4 		# push RA
-	sw ra,0(sp) 		# push RA
-	call I2C_BUSY
-	call I2C_START 		# send start condition on I2C bus
-	li a5, DS1307WAD 	# load register a0 with slave address (write), data to be sent is loaded in a0
-	call SEND_ADDRESS 	# call subroutine to send address
-	mv a5,a1 		# move address of RDA to be written from a1 to a0
-	call I2C_WRITE 		# call subroutine to transmit value loaded in a0
-	la a2,buffer 		# load sram buffer address
-	addi a2,a2,1 		# point to hi address
-	lbu a5,0(a2) 		# load 1 byte(MSB)
-	call I2C_WRITE 		# call subroutine to transmit value loaded in a0
-	addi a2,a2,-1 		# decrease buffer address
-	lbu a5,0(a2) 		# load 1 byte(LSB)
-	call I2C_WRITE 		# call subroutine to transmit value loaded in a0
-	call I2C_TX_COMPLETE 	# call subroutine that checks all transmission is completed
-	call I2C_STOP 		# call subroutine to terminate I2C operation
-	lw ra,0(sp) 		# POP RA
-	addi sp,sp,4 		# pop RA
-	ret
 #####################################################################################
 # BCD_ASCII converts BCD data received from clock in buffer to ASCII chars in clock_dispaly (sram) 
 #####################################################################################
@@ -1176,7 +909,7 @@ BCD_ASCII:
 	la a3, clock_display
 	sb x3,0(a3) 		# 2nd seconds digit
 	lb x3,0(a2)
-	andi x3,x3,0xf0
+	andi x3,x3,0x70
 	srli x3,x3,4
 	ori x3,x3,0x30
 	addi a3,a3,1
@@ -1230,16 +963,16 @@ BCD_ASCII:
 	li x5,7
 	beq x3,x5,sunday
 monday:
-	la x5,mon
-	la a1,week
-	sw x5,0(a1)
-	j dday
+	la x5,mon		# load address of string monday
+	la a1,week		# load address of sram registr wweek
+	sw x5,0(a1)		# store address of monday string in week
+	j dday			# jump to label dday
 	
 tuesday:
-	la x5,tue
-	la a1,week
-	sw x5,0(a1)
-	j dday
+	la x5,tue		# load address of string tuesday
+	la a1,week		# load address of sram register
+	sw x5,0(a1)		# store address of tuesday string in week
+	j dday			# jump to label dday
 
 wednesday:
 	la x5,wed
@@ -1402,7 +1135,7 @@ end_loop:
     	ret				# Exit the program
 
 ###################################################################################
-# seconds,minutes,hour,day,date,month,year
+#menu- adjust/set seconds,minutes,hour,day,date,month,year and store in RTC
 ###################################################################################
 menu:
 	addi sp,sp,-4
@@ -1528,8 +1261,9 @@ save_hr:
 	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
 day_start:
-	li x4,7					# counter 24 for 24 hour
+	li x4,7			# counter 24 for 24 hour
 	la a2,number
+	addi a2,a2,1		# sajeev
 	la s1,buffer
 day_loop:
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
@@ -1576,7 +1310,7 @@ save_day:
 
 	call CLEAR_SCREEN	# clear screen
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
-	la a2,mes6				# "adj date ",0
+	la a2,mes6		# "adj date ",0
 	call string_reader
 	call delay1S
 	call delay1S
@@ -1585,6 +1319,7 @@ save_day:
 date_start:
 	li x4,31				# counter 12 for 12 month
 	la a2,number
+	addi a2,a2,1		# sajeev
 	la s1,buffer
 date_loop:
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
@@ -1641,6 +1376,7 @@ save_date:
 month_start:
 	li x4,12				# counter 12 for 12 month
 	la a2,number				# load address of number array to be displayed from which user will select
+	addi a2,a2,1				# sajeev
 	la s1,buffer				# load address of buffer
 month_loop:
 	SETCURSOR 0, 0, 15, 31	# set OLED cursor to 0,0
@@ -1740,22 +1476,29 @@ save_year:
 	sb x3,0(s1)				# month BCD in clock_display 6
 
 clock_update:
-	call I2C_BUSY 				# check weather I2C is busy ,wait till free
 	call I2C_START 				# send start condition on I2C bus
-	li a5,DS1307WAD 			# clock write address
-	call SEND_ADDRESS 			# call subroutine to send address
-	li a5,0x00 				# clock register 0x00 is set as pointer
+	li x7,DS1307WAD 			# clock write address
+	call I2C_WRITE
+	li x7,0x00 				# clock register 0x00 is set as pointer
 	call I2C_WRITE 				# call subroutine to transmit value loaded in a5
+	li x7,0x80				# only for DS1307
+	call I2C_WRITE				# only for DS1307
+	call I2C_STOP				# only for DS1307
+# for DS3231 start from here##################	
+	call I2C_START				
+	li x7,DS1307WAD
+	call I2C_WRITE
+	li x7,0x00
+	call I2C_WRITE
 	la a2,clock_display
 	li x3,7
 time_set_loop:
-	lb a5,0(a2)
+	lb x7,0(a2)
 	call I2C_WRITE
 	addi a2,a2,1
 	addi x3,x3,-1
 	bnez x3,time_set_loop
-	call I2C_TX_COMPLETE # call subroutine that checks all transmission is completed
-	call I2C_STOP # call subroutine to terminate I2C operation
+	call I2C_STOP 				# call subroutine to terminate I2C operation
 	lw ra,0(sp)
 	addi sp,sp,4
 	ret
@@ -1806,14 +1549,11 @@ time_set_loop:
 	lw ra,0(sp)
 	addi sp,sp,16
 	ret
-################################################################################
 
 
 ###################################################################################################################
 # load_DF_command  used to construct basic DF command structure in result1 , use macro loadPARAM to fill parameters
 ####################################################################################################################
-
-
 load_DF_command:
 	addi sp,sp,-16
 	sw ra,0(sp)
@@ -1864,7 +1604,7 @@ Uloop:
 ######################################################################################
 
 start_audio:
-	addi sp,sp,-28
+	addi sp,sp,-36
 	sw ra,0(sp)
 	sw a0,4(sp)
 	sw a1,8(sp)
@@ -1872,43 +1612,67 @@ start_audio:
 	sw x5,16(sp)
 	sw x4,20(sp)
 	sw x3,24(sp)
+	sw x7,28(sp)
+	sw x8,32(sp)
 
 DF_ON:
-	la x10,R32_GPIOC_BSHR		# R32_GPIOC_BSHR register sets and resets GPIOC pins, load address into pointer x10
+	la x10,R32_GPIOD_BSHR		# R32_GPIOD_BSHR register sets and resets GPIOD pins, load address into pointer x10
 	lw x11,0(x10)			# load contents to x11
-	li x7,(1<<0)			# set pc0 by shifting 1 to bit position 0
+	li x7,(1<<0)			# set pd0 by shifting 1 to bit position 4
 	or x11,x11,x7			# OR with x11
-	sw x11,0(x10)			# store x11 to R32_GPIOC_BSHR
+	sw x11,0(x10)			# store x11 to R32_GPIOD_BSHR
 
 	call I2C_START 		# send start condition on I2C bus
-	li a5,DS1307WAD 	# radio random read address
-	call SEND_ADDRESS 	# call subroutine to send address
-	li a5,0x00 		# clock register 0x00 is set as pointer
+	li x7,DS1307WAD 	# radio random read address
 	call I2C_WRITE 		# call subroutine to transmit value loaded in a0
-	call clock_read 	# reads 7 bytes from clock register read into buffer (second,minute,hour,day,date,month,year)
+	li x7,0x00 		# clock register 0x00 is set as pointer
+	call I2C_WRITE 		# call subroutine to transmit value loaded in a0
+	call clock_read 	# reads 7 bytes from clock register 
+
 
 	call load_DF_command
-	loadPARAM CMD_RESET, 0x00, 0x00, 0x00   # initialize DF player
+	li x6,0x00
+	li x7,0x00
+	loadPARAM1 CMD_RESET, 0x00, x7, x6   # initialize DF player
 	call send_DF_commands
 	call delay1S
 	call load_DF_command
-	loadPARAM CMD_SELECT_DEVICE, 0x00, 0x00, 0x02   # select SD card
+	li x6,0x02
+	li x7,0x00
+	loadPARAM1 CMD_SELECT_DEVICE, 0x00, x7, x6   # select SD card
 	call send_DF_commands
 	call delay1S
 	call load_DF_command
-	loadPARAM CMD_SET_VOLUME, 0x00, 0x00, 0x14   #Select device volume 20 = 0x14
+	li x6,0x14
+	li x7,0x00
+	loadPARAM1 CMD_SET_VOLUME, 0x00, x7, x6   #Select device volume 20 = 0x14
 	call send_DF_commands
-	call delay1S	
-	
+	call delay1S
+
+cal_lang_folder:	
+	la a1,language
+	lb x7,0(a1)
+	beqz x7,for0
+	li x4,9
+	mv x8,x7
+multiplyF1:
+	add x7,x7,x8
+	addi x4,x4,-1
+	bnez x4, multiplyF1
+for0:
+	addi x7,x7,1		# increase result by 1 , folder starts from 1 (1-8 for one language, then 11-18 .....)
+
 	call load_DF_command
-	loadPARAM CMD_PLAY_FOLDER_FILE, 0x00, 0x01, 0x00   #Select "now time" in folder 01 track 000
+	li x6,0x00
+	li x7,0x00
+	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, x7, x6   #Select "now time" in folder 01 track 000
 	call send_DF_commands
 	call delay1S
 
 	la a1,buffer
 	addi a1,a1,2            # increment address pointer to 3rd byte hour
 	lb x3,0(a1)
-	andi x3,x3,0xf0
+	andi x3,x3,0x70
 	srli x3,x3,4
 	li x4,9
 	mv x5,x3
@@ -1920,8 +1684,9 @@ multiply1:
 	lb x3,0(a1)
 	andi x3,x3,0x0f
 	add x6,x6,x3
+	addi x7,x7,1		# increment folder
 	call load_DF_command
-	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, 0x02, x6   #Select hour in folder 02
+	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, x7, x6   #Select hour in folder 02
 	call send_DF_commands
 	call delay1S
 	call delay1S
@@ -1941,14 +1706,17 @@ multiply2:
 	lb x3,0(a1)
 	andi x3,x3,0x0f
 	add x6,x6,x3
+	addi x7,x7,1		# increment folder
 	call load_DF_command
-	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, 0x03, x6   #Select minute in folder 03
+	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, x7, x6   #Select minute in folder 03
 	call send_DF_commands
 	call delay1S
 	call delay1S
 
+	addi x7,x7,1		# increment folder
 	call load_DF_command
-	loadPARAM CMD_PLAY_FOLDER_FILE, 0x00, 0x04, 0x00   #Select "today" in folder 04 track 000
+	li x6,0x00
+	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, x7, x6   #Select "today" in folder 04 track 000
 	call send_DF_commands
 	call delay1S
 
@@ -1958,8 +1726,9 @@ multiply2:
 	lb x3,0(a1)
 	andi x3,x3,0x0f
 	mv x6,x3
+	addi x7,x7,1
 	call load_DF_command
-	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, 0x05, x6   #Select day in folder 05
+	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, x7, x6   #Select day in folder 05
 	call send_DF_commands
 	call delay1S
 	
@@ -1979,8 +1748,9 @@ multiply3:
 	lb x3,0(a1)
 	andi x3,x3,0x0f
 	add x6,x6,x3
+	addi x7,x7,1		# increment folder
 	call load_DF_command
-	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, 0x06, x6   #Select date in folder 06
+	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, x7, x6   #Select date in folder 06
 	call send_DF_commands
 	call delay1S
 	call delay1S
@@ -2001,8 +1771,9 @@ multiply4:
 	lb x3,0(a1)
 	andi x3,x3,0x0f
 	add x6,x6,x3
+	addi x7,x7,1		# increment folder
 	call load_DF_command
-	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, 0x07, x6   #Select month in folder 07
+	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, x7, x6   #Select month in folder 07
 	call send_DF_commands
 	call delay1S
 
@@ -2021,19 +1792,23 @@ multiply5:
 	lb x3,0(a1)
 	andi x3,x3,0x0f
 	add x6,x6,x3
+	addi x7,x7,1		# increment folder
 	call load_DF_command
-	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, 0x08, x6  #Select year in folder 08
+	loadPARAM1 CMD_PLAY_FOLDER_FILE, 0x00, x7, x6  #Select year in folder 08
 	call send_DF_commands
 	call delay1S
 	call delay1S
 DF_OFF:
-	la x10,R32_GPIOC_BSHR		# R32_GPIOD_BSHR register sets and resets GPIOC pins, load address into pointer x10
+	la x10,R32_GPIOD_BSHR		# R32_GPIOD_BSHR register sets and resets GPIOC pins, load address into pointer x10
 	lw x11,0(x10)			# load contents to x11
-	li x7,1<<16			# reset pc0 by shifting 1 into bit position 16 of R32_GPIOD_BSHR
+	li x7,1<<16			# reset pd0 by shifting 1 into bit position 20 of R32_GPIOD_BSHR
 	or x11,x11,x7			# OR with x11
-	sw x11,0(x10)			# store x11 to R32_GPIOC_BSHR
+	sw x11,0(x10)			# store x11 to R32_GPIOD_BSHR
 
+	
 
+	lw x8,32(sp)
+	lw x7,28(sp)
 	lw x3,24(sp)
 	lw x4,20(sp)
 	lw x5,16(sp)
@@ -2041,11 +1816,8 @@ DF_OFF:
 	lw a1,8(sp)
 	lw a0,4(sp)
 	lw ra,0(sp)
-	addi sp,sp,28
+	addi sp,sp,36
 	ret
-
-
-#########################################################################
 
 		
 #########################################################################
@@ -2306,236 +2078,7 @@ setTFTwindow:
 # RAMWR command Memory range: (0000h, 0000h) -> (007Fh, 09Fh) , 128x160x18-bit memory can be written by this command
 ###################################################################################	
 
-################################################################################################
-# multiplication routine , multiplies a1 and a2 , used in PIXEL_REPEAT1 to calculate total pixels
-###################################################################################################
-soft_mul:			# 32 bit multiplication subroutine
-	addi sp,sp,-32		# adjust stack pointer
-	sw ra,0(sp)		# PUSH
-	sw a0,4(sp)
-	sw a1,8(sp)		# PUSH
-	sw a2,12(sp)		# PUSH
-	sw a3,16(sp)		# PUSH
-	sw a4,20(sp)		# PUSH
-	sw a5,24(sp)		# PUSH
-	sw t0,28(sp)
 
-#	li a1,0xffffffff 	# multiplicand
-#	la t0,modulo		# point t0 to modulo register
-#	lw a1,0(t0)		# copy remainder/modulo to a1 , multiplicand
-# 	li a2,1000		# multiplier
- 	li a3,0x00000000 	# result_lo
- 	li a4,0x00000000 	# result_hi
-	li a5,0			# working register 
- 	beqz a1,load0
- 	beqz a2,load0
- 
- start1:
- 	call ROR		# rotate right multiplier to test lsb is 0 or 1
- 	bnez x3,multiply	# if lsb =1 branch to repeated adding of multiplicant to result register
- finishmul:
- 	call RLL2		# shift multiplicand left or multiply by 2
- 	beqz a2,exit_proc	# if a2 is 0 branch to exit_proc
- 	J start1		# repeat loop
-load0:
- 	li a3,0
- exit_proc:
- 	#j exit_proc
-	la t0,result_lo		# point t0 to result_lo register
-	sw a3,0(t0)		# store result of multiplication( modulo * 1000)
-	la t0,result_hi		# point t0 to result_hi register to store carry
-	sw a4,0(t0)		# store high byte result of multiplication( modulo * 1000)
-
-	lw t0,28(sp)
-	lw a5,24(sp)		# POP
-	lw a4,20(sp)		# POP
-	lw a3,16(sp)		# POP
-	lw a2,12(sp)		# POP
-	lw a1,8(sp)		# POP
-	lw a0,4(sp)		# POP
-	lw ra,0(sp)		# POP
-	addi sp,sp,32
- 	ret			# return to division routine
- multiply:
- 	add a5,a3,a1		# add multiplicant to low result register and store final result in a5 for processing
- 	sltu a0,a5,a3		# set a0 to 1 if result of addition a3:a1 i a5 is greater than a3
- 	sltu x3,a5,a1		# set x3 to 1 if result of addition a3:a1 in a5 is greater than a1
- 	or a0,a0,x3		# or a0 and x3 , if 1 carry if a0 = 0 no carry
- 	bnez a0,carryset	# if a0 = 1 carry set, branch to label carry set
- 	mv a3,a5		# result in working register copied to a3 low result register
- 	J finishmul		# jump to label finishmul
- carryset:			# reach here only if carryset
- 	mv a3,a5		# copy a5 to low result a3
- 	addi a4,a4,1		# add carry to a4 high register result
- 	J finishmul		# jump to label finishmul
- 
- ROR:
- 	li x3,0			# clear carry
- 	mv t0,a2		# copy number in a2 to t0
- 	andi t0,t0,1		# extract lsb is 0 or 1
- 	beqz t0,zzz		# if lab is 0 branch to zzz
- 	li x3,1		# if lsb is 1 carry occured , load 1 in carry register x3
- 	srli a2,a2,1		# shift right a2 by 1 postion 
- 	ret			# return to caller
- zzz:				# reach here if lsb =0
- 	li x3,0			# load x3 0 indicating carry bit is 0
- 	srli a2,a2,1		# right shift multiplier once. divide multiplier by 2
- 	ret			# return to caller
- 
- ROL:
- 	li x3,0			# 
- 	mv t0,a2
- 	li x3,0x80000000
- 	and t0,t0,x3
- 	beqz t0,zzz1
- 	li x3,1			# carry
- 	slli a2,a2,1
- 	ret
- zzz1:
- 	li x3,0
- 	slli a2,a2,1
- 	ret
- 
- RLL2:				# rotate left 2 registers a3:a5
- 	mv a5,a4		# copy contents of a4 to a5
- 	li x3,0			# clear x3
- 	mv t0,a1		# copy multiplicant to t0
- 	li x3 ,0x80000000	# load x3 MSB bitmask
- 	and t0,t0,x3		# and with 0x800000000 to extract the MSB
- 	bnez t0,OR1		# if MSB = 1 branch to OR1 label
- 	slli a1,a1,1		# shift left 1 position a1 register ( multiplicant)
- 	slli a5,a5,1		# shift left 1 position working register with value of a4 register ( multiplicant)
- 	beqz a2,exit		# if multiplier register is 0 exit
- 	mv a4,a5		# copy back the shifter multiplicant to a4
- 	ret
- OR1:
- 	mv a5,a4
- 	slli a1,a1,1
- 	slli a5,a5,1
- 	li x3,1
- 	or a5,a5,x3
- 	beqz a2,exit
- 	mv a4,a5
- 	ret
-exit:
-	ret
-
-
-##########################################################################################################
-#
-#	li t1,4				# t1 counter = 4
-#	
-#readloop2:
-#	lb t2,3(x10)			# loads 1 byte to t2 from result
-#	call bin_to_ascii		# convert bin to ascii
-#	addi x10,x10,-1			# decrease pointer
-#	addi t1,t1,-1			# decrease counter
-#	bnez t1,readloop2		# loop till counter is 0
-#	li x8,0x0d			# line feed
-#	call USART_TX			# call uart
-#	li x8,0x0a			# carriage feed
-#	call USART_TX			# call uart
-##########################################################################################################
-# converts 1 byte into ASCII represented hexadecimal value , load byte in t2
-##########################################################################################################
-bin_to_ascii:
-	addi sp,sp,-4
-	sw ra,0(sp)
-	mv a3,t2
-	andi a3,a3,0xf0
-	srli a3,a3,4
-	slti a4,a3,10			# set a4 to 1 if a3 is less than 10 ,10and higher a4=0
-	beqz a4 ,letter1
-	ori a3,a3,0x30
-	#mv a0,a3
-	mv x8,a3
-	call USART_TX
-	j low_nibble
-letter1:
-	addi a3,a3,0x37
-	#mv a0,a3
-	mv x8,a3
-	call USART_TX
-low_nibble:
-	mv a3,t2
-	andi a3,a3,0x0f
-	slti a4,a3,10			# set a4 to 1 if a3 is less than 10 ,10and higher a4=0
-	beqz a4 ,letter2
-	ori a3,a3,0x30
-	#mv a0,a3
-	mv x8,a3
-	call USART_TX
-	j exit_bin_to_ascii
-letter2:
-	addi a3,a3,0x37
-	#mv a0,a3
-	mv x8,a3
-	call USART_TX
-exit_bin_to_ascii:
-	lw ra,0(sp)
-	addi sp,sp,4
-	ret
-#################################################################################################
-# PIXEL_REPEAT should be called after loading the y1,y0,x1,x0 pixel coordinates in variable XYC
-# to print rectagle/line on LCD , automatically sets window
-#################################################################################################
-
-PIXEL_REPEAT1:
-	addi sp,sp,-36			# move stack pointer 3 words
-	sw ra,0(sp)			# push return address
-	sw x5,4(sp)
-	sw x6,8(sp)
-	sw x7,12(sp)
-	sw x8,16(sp)
-	sw x10,20(sp)
-	sw x11,24(sp)
-	sw x12,28(sp)
-	la x10,result_lo
-	lw x7,0(x10)
-	sw x7,32(sp)
-	la x10,XYC
-	lbu x5,0(x10)			# x0 from XYC
-	addi x10,x10,1			# byte1
-	lbu x6,0(x10)			# x1 from XYC
-	beq x5,x6,only_lineH		# if X1 and x0 is same ,horizontal component is 0 , probably a vertical line ,branch to only_lineH
-	sub x5,x6,x5			# x1-x0
-	mv x11,x5			# x11 = a1 multiplicand
-	J not_lineH			# x1 not = to x0 means this is a rectangle and not a line, jump to not_lineH
-only_lineH:
-	mv x11,x5			# x11 = a1 multiplicand
-not_lineH:
-	addi x10,x10,1			# byte2
-	lbu x6,0(x10)			# y0
-	addi x10,x10,1			# byte3
-	lbu x7,0(x10)			# y1
-	beq x7,x6,only_lineV
-	sub x6,x7,x6			# y1-y0
-	mv x12,x6			# x11 = a1 multiplicand
-	j not_lineV
-only_lineV:
-	mv x12,x7			# x11 = a1 multiplicand
-not_lineV:
-	call soft_mul			# muliplication subroutine
-	la x10,result_lo
-	lw x5,0(x10)			# length ((x1-x0)*(y1-y0)) = total number of pixels to be written
-	call setTFTwindow		# sets the write window for the calculated number of pixels in the given rectangle
-repeat_pixel1:
-	call TFTpixel			# writes single pixel
-	addi x5,x5,-1			# reduce counter
-	bnez x5,repeat_pixel1		# if counter is above 0 repeat writing pixel
-	la x10,result_lo
-	lw x7,32(sp)
-	sw x7,0(x10)
-	lw x12,28(sp)
-	lw x11,24(sp)
-	lw x10,20(sp)
-	lw x8,16(sp)
-	lw x7,12(sp)
-	lw x6,8(sp)
-	lw x5,4(sp)
-	lw ra,0(sp)			# pop return address register
-	addi sp,sp,36			# restore stack pointer to old position
-	ret				# return to caller
 ###################################################################################################################
 # ST7735_init subroutines load the initialization values for the LCD
 ###################################################################################################################
@@ -2813,8 +2356,6 @@ FONT_COLOUR:
 	ret
 
 ############################################################################
-# push_cursor1 , pushes cursor for 16x32 pixel font
-############################################################################
 
 push_cursor1:
 	addi sp,sp,-24
@@ -2836,13 +2377,13 @@ push_cursor1:
 	li x6, width		# 128 pixels
 	bltu x5,x6,hpush	# if less than 128 pixels branch to hpush
 				# reset x to 0 and increase y by height of font
-	addi x10,x10,3		# old y1
+	addi x10,x10,3		#old y1
 	lb x7,0(x10)		# loa old y1
 	addi x11,x11,2		# store in x11 new y0
 	sb x7,0(x11)		# store new y0
-	addi x10,x10,-1		# y0
-	lb x5,0(x10)		# old y0
-	sub x5,x7,x5		# old y1-y0 = height
+	addi x10,x10,-1		#y0
+	lb x5,0(x10)		#old y0
+	sub x5,x7,x5		#old y1-y0 = height
 	add x5,x7,x5		# new y0 + height = new y1
 	li x6,height		# 160 pixels
 	bltu x5,x6,vpush	# if height less than 160 pixels branch  to vpush
@@ -2938,533 +2479,7 @@ loadfont:
 	ret
 
 #########################################################################################
-# doubles 16x32 font to 32x64
-#########################################################################################
 
-DRAW_CHAR_DOUBLE:
-	addi sp,sp,-32
-	sw ra,0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-	sw x5,12(sp)
-	sw x7,16(sp)
-	sw x4,20(sp)
-	sw x6,24(sp)
-	sw x12,28(sp)
-	la x10,counter
-	li x11,4
-	sw x11,0(x10)
-	la x10,state
-	lw x11,0(x10)
-#	la x11,A
-	li x5,128
-loadbyte1:
-	li x4,8
-	lbu x7,0(x11)
-	addi x11,x11,1
-	addi x5,x5,-1
-	beqz x5,font_finish1
-repeat_column:
-	la x10,counter
-	lw x12,0(x10)
-	addi x12,x12,-1
-	sw x12,0(x10)
-	li x6,2
-	beq x12,x6,reset_pointer
-	bnez x12,extract1
-#######	addi x11,x11,2
-	la x10,counter
-	li x6,4
-	sw x6,0(x10)
-extract1:
-	andi x6,x7,0x80
-	beqz x6,BGW1
-	call FONT_COLOUR1
-	slli x7,x7,1
-	addi x4,x4,-1
-	bnez x4,extract1
-	j loadbyte1
-BGW1:
-	call BG_COLOUR1
-	slli x7,x7,1
-	addi x4,x4,-1
-	bnez x4,extract1
-	j loadbyte1
-font_finish1:
-	lw x12,28(sp)
-	lw x6,24(sp)
-	lw x4,20(sp)
-	lw x7,16(sp)
-	lw x5,12(sp)
-	lw x11,8(sp)
-	lw x10,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,32
-	ret
-
-
-.align 4
-BG_COLOUR1:
-	addi sp,sp,-16
-	sw ra, 0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-	sw x7,12(sp)
-	la x11,FONTCOLOR
-	la x10,XYCOLOUR
-	addi x10,x10,3			# point to byte3 ,colour hi byte stored here
-	addi x11,x11,1			# back ground colour hibyte for font stored here
-	lb x7,0(x11)
-	sb x7,0(x10)			# hi byte
-	addi x10,x10,-1
-	addi x11,x11,-1
-	lb x7,0(x11)
-	sb x11,0(x10)			# lo byte
-	call TFTpixel
-	call TFTpixel
-	lw x7,12(sp)
-	lw x11,8(sp)
-	lw x10,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,16
-	ret
-	
-.align 4
-FONT_COLOUR1:
-	addi sp,sp,-16
-	sw ra, 0(sp)
-	sw x10,4(sp)
-	sw x11,8(sp)
-	sw x7,12(sp)
-	la x11,FONTCOLOR
-	la x10,XYCOLOUR
-	addi x10,x10,3			# point to byte3
-	addi x11,x11,3			# font colour hibyte for font stored here
-	lb x7,0(x11)
-	sb x7,0(x10)
-	addi x10,x10,-1			# point to byte2
-	addi x11,x11,-1			# point to byte2
-	lb x7,0(x11)
-	sb x7,0(x10)
-	call TFTpixel
-	call TFTpixel
-	lw x7,12(sp)
-	lw x11,8(sp)
-	lw x10,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,16
-	ret
-reset_pointer:
-	addi x11,x11,-2
-	j extract1
-######################################################################################
-
-fillCircle:
-	addi sp,sp,-36
-	sw ra,0(sp)
-	sw x7,4(sp)
-	sw x8,8(sp)
-	sw x9,12(sp)
-	sw x10,16(sp)
-	sw x11,20(sp)
-	sw x12,24(sp)
-	sw x13,28(sp)
-	sw x14,32(sp)
-	la x10,buffer2
-	lb x7,0(x10)			# radius
-	mv a1,x7			# radius ,X11
-	mv a2,x7			# radius ,x12
-	call soft_mul			# radius square
-	la x10,result_lo		# result in result_lo = radius square
-	la x11,buffer1			# place to store r^2 in buffer1
-	lw x7,0(x10)			# copy from result_lo
-	sw x7,0(x11)			# store radius square in buffer1
-	li x7,0				# i ,i counter initiated in x7 .0 to radius max
-circle_loop:
-	mv a1,x7			# move new value of i to a1 for squaring with softmul routine
-	mv a2,x7			# move new value of i to a1 for squaring with softmul routine
-	call soft_mul			# soft_mul multiplies value in (a1 & a2)x11 & x12 , result will be stored in result_lo
-	la x10,buffer1			# square of r
-	la x11,result_lo		# square of i 
-	lw x8,0(x10)			# square of r in x8
-	lw x9,0(x11)			# square of i in x9
-	sub x10,x8,x9			# rsq -isq store in x10, value to be rooted in x10
-	call floor_sqrt			# length of base in result_lo
-	la x11,result_lo		# result_lo holds the base = sqrt operation
-	lw x9,0(x11)			# base in x9
-	la x14,buffer2			# radius ,x ,y stored in buffer2
-	lb x10,0(x14)			# radius in x10
-	addi x14,x14,1			# point x14 to byte1 which holds y
-	lb x11,0(x14)			# x11 is loaded with byte1 ,y. x and y are same and can be used alterntely	
-	sub x12,x11,x9			# starting of line is (x-base) (x0 of horizontal line) in x12
-	add x13,x11,x7			# position of y of upper horizontal line from center,(y+i) , new y in x13
-	add x14,x9,x9			# end of horizontal line x1 is (base x 2)+ x0, (base +base)+x0 = x1
-	add x14,x14,x12			# (base +base)+x0 = x1
-	la x10,XYC			# holds pixel coordinates of horizontal line 
-	sb x12,0(x10)			# x0
-	addi x10,x10,1
-	sb x14,0(x10)			# x1
-	addi x10,x10,1
-	sb x13,0(x10)			# y0
-	addi x10,x10,1
-	sb x13,0(x10)			# y1
-	call PIXEL_REPEAT1		# prints pixels based on the cordinates in XYC
-	la x11,result_lo		# result_lo holds the base = sqrt operation
-	lw x9,0(x11)			# base in x9
-	la x14,buffer2			# radius ,x ,y stored in buffer2
-	lb x10,0(x14)			# radius in x10
-	addi x14,x14,1			# point x14 to byte1 which holds y
-	lb x11,0(x14)			# x11 is loaded with byte1 ,y. x and y are same and can be used alterntely	
-	sub x12,x11,x9			# starting of line is (x-base) (x0 of horizontal line) in x12
-	sub x13,x11,x7			# position of y of upper horizontal line from center,(y-i) , new y in x13
-	add x14,x9,x9			# end of horizontal line x1 is base x 2, base +base = x1
-	add x14,x14,x12			# (base +base)+x0 = x1
-	la x10,XYC
-	sb x12,0(x10)			# x0
-	addi x10,x10,1
-	sb x14,0(x10)			# x1
-	addi x10,x10,1
-	sb x13,0(x10)			# y0
-	addi x10,x10,1
-	sb x13,0(x10)			# y1
-	call PIXEL_REPEAT1
-	addi x7,x7,1			# increase i by 1 count till the length of radius r
-	la x10,buffer2
-	lb x12,0(x10)			# load radius in x12
-	bne x7,x12,circle_loop		# if i is less than radius loop back to circle_loop
-	lw x14,32(sp)
-	lw x13,28(sp)
-	lw x12,24(sp)
-	lw x11,20(sp)
-	lw x10,16(sp)
-	lw x9,12(sp)
-	lw x8,8(sp)
-	lw x7,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,36
-	ret
-############################################################################################
-
-# needs value in x10, square root in result_lo
-floor_sqrt:
-	addi sp,sp,-28
-	sw ra,0(sp)
-	sw x5,4(sp)
-	sw x7,8(sp)
-	sw x8,12(sp)
-	sw x10,16(sp)
-	sw x13,20(sp)
-	sw x14,24(sp)
-        li   x5, 0            # unsigned int s = 0;
-        li   x8, 1            # unsigned int i = 1;t1
-        slli x8, x8, 15       # i = i << 15
-for_next_bit:
-        beqz x8, next_bit_end # if i == 0 goto next_bit_end
-        add  x7, x5, x8       # t2 = s + i
-#        mul  t3, t2, t2       # t3 = (t2)^2 = (s+i)^2
-	mv a1,x7
-	mv a2,x7
-	call soft_mul
-	
-	la x13,result_lo
-	lw x14,0(x13)
-
-        bltu x10, x14, if_x_is_less_than_t3     # if a0 < t3 then don't add
-        add  x5, x5, x8       # s = s + i
-	
-if_x_is_less_than_t3:
-        srli x8, x8, 1        # i = i >> 1
-        j for_next_bit        # goto for_next_bit
-next_bit_end: 
-	
-	mv x10, x5
-	la x7,result_lo
-	sw x10,0(x7)
-        lw x14,24(sp)
-        lw x13,20(sp)
-        lw x10,16(sp)
-	lw x8,12(sp)
-        lw x7,8(sp)
-        lw x5,4(sp)
-        lw ra,0(sp)
-        addi sp,sp,28
-        ret
-
-#########################################################################
-# D_ASCII subroutine for converting binary in result1 to DECIMAL (ASCII)
-#########################################################################
-
-D_ASCII:			
-	addi sp,sp,-32		# adjust stack pointer
-	sw ra,28(sp)		# PUSH
-	sw x15,24(sp)		# PUSH
-	sw x11,20(sp)		# PUSH
-	sw x8,16(sp)		# PUSH
-	sw x7,12(sp)		# PUSH
-	sw x5,8(sp)		# PUSH
-	sw x4,4(sp)		# PUSH
-	sw t1,0(sp)		# PUSH
-	li x4,0			# clear register
-	li x5,0			# clear register
-	li x7,0			# clear register
-	li x8,0			# clear register
-	li x15,0		# clear register
-	
-	la x10,result1		# result1
-	lw x4,0(x10)		# copy result1 to x4
-#	li x4,0xffffffff	# 32bit word to be converted into ascii chars
-	li x7,1000000000	# divisor
-Y1:
-	sub x8,x4,x7		# subtract divisor from word to be converted
-	sltu x5,x4,x7		# if result negative set x5 to indicate cannot be divided
-	bnez x5,X1		# if result negative(not divisible) branch to X1
-	mv x4,x8		# else move remainder to x4 for further division/subtraction
-	addi x15,x15,1		# increase result by 1
-	j Y1			# jump to label Y1 till not divisible
-X1:
-	addi x15,x15,0x30	# add ascii 0 to result to convert to ASCII char
-	la x10,mem		# set pointer x10 to SRAM register mem to store the byte
-	sb x15,0(x10)		# store byte in mem+0
-	li x15,0		# clear result
-	li x7,100000000		# load x7 with new divisor
-Y2:
-	sub x8,x4,x7		# subtract divisor from word to be converted
-	sltu x5,x4,x7		# if result negative set x5 to indicate cannot be divided
-	bnez x5,X2		# if result negative(not divisible) branch to X2
-	mv x4,x8		# else move remainder to x4 for further division/subtraction
-	addi x15,x15,1		# increase result by 1
-	j Y2			# jump to label Y2 till not divisible
-X2:
-	addi x15,x15,0x30	# add ascii 0 to result to convert to ASCII char
-	addi x10,x10,1		# set pointer x10 to SRAM register mem+1 to store the byte
-	sb x15,0(x10)		# store byte in mem+1
-	li x15,0		# clear result
-	li x7,10000000		# load x7 with new divisor
-Y3:
-	sub x8,x4,x7		# subtract divisor from word to be converted
-	sltu x5,x4,x7		# if result negative set x5 to indicate cannot be divided
-	bnez x5,X3		# if result negative(not divisible) branch to X3
-	mv x4,x8		# else move remainder to x4 for further division/subtraction
-	addi x15,x15,1		# increase result by 1
-	j Y3			# jump to label Y3 till not divisible
-X3:
-	addi x15,x15,0x30	# add ascii 0 to result to convert to ASCII char
-	addi x10,x10,1		# set pointer x10 to SRAM register mem+2 to store the byte
-	sb x15,0(x10)		# store byte in mem+2
-	li x15,0		# clear result
-	li x7,1000000		# load x7 with new divisor
-Y4:
-	sub x8,x4,x7		# subtract divisor from word to be converted
-	sltu x5,x4,x7		# if result negative set x5 to indicate cannot be divided
-	bnez x5,X4		# if result negative(not divisible) branch to X4
-	mv x4,x8		# else move remainder to x4 for further division/subtraction
-	addi x15,x15,1		# increase result by 1
-	j Y4			# jump to label Y4 till not divisible
-X4:
-	addi x15,x15,0x30	# add ascii 0 to result to convert to ASCII char
-	addi x10,x10,1		# set pointer x10 to SRAM register mem+3		
-	sb x15,0(x10)		# store byte in mem+3
-	li x15,0		# clear result
-	li x7,100000		# load x7 with new divisor
-Y5:
-	sub x8,x4,x7		# subtract divisor from word to be converted
-	sltu x5,x4,x7		# if result negative set x5 to indicate cannot be divided
-	bnez x5,X5		# if result negative(not divisible) branch to X5
-	mv x4,x8		# else move remainder to x4 for further division/subtraction
-	addi x15,x15,1		# increase result by 1
-	j Y5			# jump to label Y5 till not divisible
-X5:
-	addi x15,x15,0x30	# add ascii 0 to result to convert to ASCII char
-	addi x10,x10,1		# set pointer x10 to SRAM register mem+4 to store the byte
-	sb x15,0(x10)		# store byte in mem+4
-	li x15,0		# clear result
-	li x7,10000		# load x7 with new divisor
-Y6:
-	sub x8,x4,x7		# subtract divisor from word to be converted
-	sltu x5,x4,x7		# if result negative set x5 to indicate cannot be divided
-	bnez x5,X6		# if result negative(not divisible) branch to X6
-	mv x4,x8		# else move remainder to x4 for further division/subtraction
-	addi x15,x15,1		# increase result by 1
-	j Y6			# jump to label Y6 till not divisible
-X6:
-	addi x15,x15,0x30	# add ascii 0 to result to convert to ASCII char
-	addi x10,x10,1		# set pointer x10 to SRAM register mem+5 to store the byte
-	sb x15,0(x10)		# store byte in mem+5
-	li x15,0		# clear result
-	li x7,1000		# load x7 with new divisor
-Y7:
-	sub x8,x4,x7		# subtract divisor from word to be converted
-	sltu x5,x4,x7		# if result negative set x5 to indicate cannot be divided
-	bnez x5,X7		# if result negative(not divisible) branch to X7
-	mv x4,x8		# else move remainder to x4 for further division/subtraction
-	addi x15,x15,1		# increase result by 1
-	j Y7			# jump to label Y7 till not divisible
-X7:
-	addi x15,x15,0x30	# add ascii 0 to result to convert to ASCII char
-	addi x10,x10,1		# set pointer x10 to SRAM register mem+6 to store the byte
-	sb x15,0(x10)		# store byte in mem+6
-	li x15,0		# clear result
-	li x7,100		# load x7 with new divisor
-Y8:
-	sub x8,x4,x7		# subtract divisor from word to be converted
-	sltu x5,x4,x7		# if result negative set x5 to indicate cannot be divided
-	bnez x5,X8		# if result negative(not divisible) branch to X8
-	mv x4,x8		# else move remainder to x4 for further division/subtraction
-	addi x15,x15,1		# increase result by 1
-	j Y8			# jump to label Y8 till not divisible
-X8:
-	addi x15,x15,0x30	# add ascii 0 to result to convert to ASCII char
-	addi x10,x10,1		# set pointer x10 to SRAM register mem+7 to store the byte
-	sb x15,0(x10)		# store byte in mem+7
-	li x15,0		# clear result
-	li x7,10		# load x7 with new divisor
-Y9:
-	sub x8,x4,x7		# subtract divisor from word to be converted
-	sltu x5,x4,x7		# if result negative set x5 to indicate cannot be divided
-	bnez x5,X9		# if result negative(not divisible) branch to X9
-	mv x4,x8		# else move remainder to x4 for further division/subtraction
-	addi x15,x15,1		# increase result by 1
-	j Y9			# jump to label Y9 till not divisible
-X9:
-	addi x15,x15,0x30	# add ascii 0 to result to convert to ASCII char
-	addi x10,x10,1		# set pointer x10 to SRAM register mem+8 to store the byte
-	sb x15,0(x10)		# store byte in mem+8
-	li x15,0		# clear result
-	mv x15,x4
-X10:
-	addi x15,x15,0x30	# add ascii 0 to result to convert to ASCII char
-	addi x10,x10,1		# set pointer x10 to SRAM register mem+9 to store the byte	
-	sb x15,0(x10)		# store byte in mem+9
-
-	lw t1,0(sp)		# POP
-	lw x4,4(sp)		# POP
-	lw x5,8(sp)		# POP
-	lw x7,12(sp)		# POP
-	lw x8,16(sp)		# POP
-	lw x11,20(sp)		# POP
-	lw x15,24(sp)		# POP
-	lw ra,28(sp)		# POP
-	addi sp,sp,32		# adjust stack pointer
-	ret			# return to caller
-##############################################################################################
-##############################################################################################
-# Prints 10 bytes from result1 to USART with lead 0 suppress, values to be stored in mem0-mem9
-##############################################################################################
-print:
-	addi sp,sp,-20		# adjust stack pointer
-	sw ra,16(sp)		# PUSH
-	sw x11,12(sp)		# PUSH
-	sw x10,8(sp)		# PUSH
-	sw x8,4(sp)		# PUSH
-	sw t1,0(sp)		# PUSH
-
-	li x11,scratch		# point x11 to scratch register in SRAM
-	sw zero,0(x11)		# clear scratch register
-	li x10,mem		# point to address mem ,top byte stored in mem0 lowest byte in mem+9, need to print top byte 1st
-	li t1,0			# byte counter loaded with 10 , total 10 bytes to be printed (0-9)
-	li x8,10		# max count of 10bytes in x8
-
-	la x15,scratchpad	# macro num_chars will store number of characters to be printed in scratchpad byte0
-	lb x7,0(x15)		# load x7 with number of chars to be pprinted
-	sub x8,x8,x7		# subtract total char count and number to be printed
-	add x10,x10,x8		# increase address of mem pointer to diffrence of above
-	mv t1,x8		# adjust the counter also to the count matching address
-	add x8,x8,x7		# restore total count desired
-Z1:
-	lb x15,0(x10)		# load byte from mem, msb to lsb
-	li x4,0x30		# load ascii 0 in x4
-	beq x15,x4,supress0	# if result1 byte in x15 is equal to ascii 0 in x4 branch to suppress0 label
-	li x11,scratch		# point x11 to scratch if x8 is not 0,that means we have found the 1st byte that is not 0, all leading 0s finished
-	li x5,1			# load x5 with 1
-	sw x5,0(x11)		# store in scratch register in sram , used as a flag to indicate all leading 0s are finished
-print1:
-	addi x10,x10,1		# increase the address by 1 byte
-	addi t1,t1,1		# increase the byte counter once
-	call select_font	# font is selected and stored in state
-	call DRAW_CHAR32
-	call push_cursor1
-	bne t1,x8,Z1		# if t1 not equal to 10 as loaded in x8 loop back to print1 till al 10 bytes are transmitted via usart
-	lw t1,0(sp)		# POP
-	lw x8,4(sp)		# POP
-	lw x10,8(sp)		# POP
-	lw x11,12(sp)		# POP
-	lw ra,16(sp)		# POP
-	addi sp,sp,20		# adjust stack pointer
-	ret			# return to caller
-supress0:
-	li x11,scratch		# point x11 to scratch	
-	lw x5,0(x11)		# copy value of scratch to x5
-	bnez x5,no_more_supress	# if x5 is not 0 branch to label "no_more_supress"
-	li x8,0x20		# if x5 is 0 load x8 with space/blank	
-	li x4,9			# load x4 with value 9, suppose the whole value is 0, we dont want to display blank space, test this is 9th byte 2nd last byte
-	beq t1,x4,last0is0	# if t1 equals 9 in x4 branch to label "last0is0" which will keep last 0 as 0 on screen
-no_more_supress:
-	J print1		# no 0 suppression jump to print1	
-last0is0:
-	li x15,0x30		# load ascii 0 for last 0
-	J print1		# jump to print1
-
-#######################################################################################
-show_memory:
-	addi sp,sp,-20
-	sw ra,0(sp)
-	sw t1,4(sp)
-	sw t2,8(sp)
-	sw x8,12(sp)
-	sw x10,16(sp)
-
-	la x10,XYC
-	li t1,4				# t1 counter = 4
-readloop2:
-	lb t2,3(x10)			# loads 1 byte to t2 from result
-	call bin_to_ascii		# convert bin to ascii
-	addi x10,x10,-1			# decrease pointer
-	addi t1,t1,-1			# decrease counter
-	bnez t1,readloop2		# loop till counter is 0
-	li x8,0x0d			# line feed
-	call USART_TX			# call uart
-	li x8,0x0a			# carriage feed
-	call USART_TX			# call uart
-
-	lw x10,16(sp)
-	lw x8,12(sp)
-	lw t2,8(sp)
-	lw t1,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,20
-	ret
-
-show_register:
-	addi sp,sp,-20
-	sw ra,0(sp)
-	sw t1,4(sp)
-	sw t2,8(sp)
-	sw x8,12(sp)
-	sw x10,16(sp)
-
-
-	la x10,scratch
-	mv t1,sp
-	sw t1,0(x10)
-	li t1,4				# t1 counter = 4
-readloop1:
-	lb t2,3(x10)			# loads 1 byte to t2 from result
-	call bin_to_ascii		# convert bin to ascii
-	addi x10,x10,-1			# decrease pointer
-	addi t1,t1,-1			# decrease counter
-	bnez t1,readloop1		# loop till counter is 0
-	li x8,0x0d			# line feed
-	call USART_TX			# call uart
-	li x8,0x0a			# carriage feed
-	call USART_TX			# call uart
-
-	lw x10,16(sp)
-	lw x8,12(sp)
-	lw t2,8(sp)
-	lw t1,4(sp)
-	lw ra,0(sp)
-	addi sp,sp,20
-	ret
 
 ############################################################################
 .section .rodata
@@ -7002,12 +6017,12 @@ number5:
 .byte 0x50,0x51,0x52,0x53,0x54,0x55,0x56,0x57,0x58,0x59
 welcome:
 .asciz "Hello, World!" 
-mes1:.asciz  "adj hour "
-mes2:.asciz  "adj min "
-mes3:.asciz  "adj day "
-mes4:.asciz  "adj month "
-mes5:.asciz  "adj year "
-mes6:.asciz  "adj date "
+mes1:.asciz  "adj hour"
+mes2:.asciz  "adj min"
+mes3:.asciz  "adj day"
+mes4:.asciz  "adj mon"
+mes5:.asciz  "adj year"
+mes6:.asciz  "adj date"
 mon:.asciz "Monday"
 tue:.asciz "Tuesday"
 wed:.asciz "Wednesdy"
