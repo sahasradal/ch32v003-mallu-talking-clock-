@@ -1037,10 +1037,10 @@ dday:
 	addi a2,a2,1   		# increase buffer address to read next byte
 
 	lb x3,0(a2)
-	andi x3,x3,0x20 
+	andi x3,x3,0xf0 
 	srli x3,x3,4
 	ori x3,x3,0x30
-	sb x3,0(a3) 		# 2nd month, 3,2 or 1
+	sb x3,0(a3) 		# 2nd month, 1
 	lb x3,0(a2)
 	andi x3,x3,0x0f 	# bit4,bit5
 	ori x3,x3,0x30
@@ -6168,6 +6168,7 @@ sat:.asciz "Saturday"
 sun:.asciz "Sunday"
 .align 4
 base_DF_command: .byte 0x7e,0xff,0x06,0x00,0x00,0x00,0x00,0xef
+
 
 
 
